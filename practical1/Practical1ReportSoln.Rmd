@@ -1,0 +1,116 @@
+---
+title: "Practical Report 1"
+output:
+  html_document:
+    df_print: paged
+    code_folding: hide
+    highlight: monochrome
+  pdf_document: 
+    highlight: monochrome
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%")} 
+```
+
+
+# Coursework and exam marks
+
+We explore the relationship between the performance of students in coursework and their performance in the final exam. 
+```{r DataInput, echo=FALSE}
+# Data
+Exam <- read.csv("Exam.csv")
+```
+
+In the following we fit a simple linear regression model to predict a student's exam mark from their coursework mark. Figure 1 shows a scatterplot of the data together with the fitted regression line. Note that the coursework marks are out of 20 and the exam marks out of 100.
+
+<!--- Question 2 & 3 --->
+
+```{r ScatterplotMarks, fig.cap="A scatterplot of exam marks against coursework marks. Added to the plot is the line of best fit.", fig.alt="A scatterplot of exam marks against coursework marks. The observations lie close to a straight line."}
+
+# Add code here to produce a scatterplot of the data
+plot(ex ~ cw, xlab="Coursework mark (out of 20)", 
+      ylab="Exam mark (out of 100)",
+      xlim=c(0,20), ylim=c(35,100), col="navy", pch=16, data=Exam)
+
+# Fit a linear model of ex on cw
+model1 <- lm(ex ~ cw, data=Exam)
+    
+# Add the fitted regression line to the plot
+abline(model1, col="gray20")
+```
+
+<!--- Add some comments on the scatterplot (Question 3) --->
+
+We observe in Figure 1 that the observations scatter evenly around the fitted regression line. 
+Therefore the assumption of a linear relationship between exam and coursework marks is reasonable.  
+
+**Notice: the plot is of a large enough size and has clearly labelled axes. We also added a figure caption. We then described what we observed from the plot and finally drew a conclusion.**
+
+<!--- Give an illustration and interpretation of the fitted model by answering the questions raised in the practical instructions. (Questions 4 - 6). --->
+
+The intercept of the fitted regression line is `r round(coef(model1)[1], 2)` and the slope is `r round(coef(model1)[2], 2)` and so the fitted model is given by 
+\[ \widehat{\text{ex}} \quad = \quad   21.11 + 4.45 \, \text{cw},\]
+where $\widehat{\text{ex}}$ is the predicted exam mark out of 100 and $\text{cw}$ is the coursework mark out of 20. Thus, according to the fitted model, with every additional coursework mark we expect an increase in the exam mark of around 4.5 marks on average. A student who achieved a coursework mark of 10 out of 20 marks is predicted to achieve around `r round(predict(model1, newdata=list(cw = 10)), 1)` out of 100 marks in their exam. 
+
+**Note: Above we used inline commands like `round(coef(model1)[1], 2)` to report the estimated coefficients and predictions. Otherwise `R` tends to report results with spurious precision. Thus, in your own work, you should always consider sensible rounding.  In addition to reporting results, provide an illustration and interpretation so that the readers get a better understanding of the fitted model.** 
+
+If we set $\widehat{\text{ex}} = 40$ and 
+rearrange the regression equation 
+\[ \widehat{\text{ex}} \quad = \quad   21.11 + 4.45 \, \text{cw}\]
+we obtain $\text{cw} =$ `r round( (40-coef(model1)[1])/coef(model1)[2], 2)`. Assuming only integer marks are awarded, a student needs to score at least 5 out of 20 marks in the coursework to be predicted a passing exam mark, that is a mark greater than or equal to 40%.
+
+<!--- Comment on the danger of extrapolation. (Question 5) --->
+
+The fitted model predicts that a student who achieves 20 out of 20 marks in their coursework obtains around `r round(predict(model1, newdata=list(cw = 20)))` out of 100 marks in the exam. This is clearly not possible. Note that the prediction is based on an extrapolation as the maximum observed coursework mark is `r max(Exam$cw)`. The predictions of a simple linear regression model become less accurate as we move away from the range of observed predictor values, so the fitted simple linear regression model may not be appropriate for every range of values. A priori, there is no restriction on the values that a simple linear regression model may predict, and so predicted exam marks of more than 100 or less than 0 are possible.
+
+**Notice: This is a reminder that a linear model may not be appropriate for every range of predictor values! Beware of extrapolation!**
+
+
+<!--- Discuss the suggested re-parameterisation of the model. (Question 6 and 7) --->
+
+If we use the percentage achieved in coursework as the predictor variable rather than the original marks out of 20, then this re-parameterises the model. A reparameterisation has no effect on the fitted values, so the predictions from the original model (Model 1 using the original coursework marks) and the new parameterisation (Model 2 using the coursework marks in percent) are identical. This can also be seen in the scatterplots in Figure 2 where on the left we show the original model (Model 1) and on the right we show the re-parameterised model (Model 2).  The fitted values in the two plots have exactly the same y-coordinates. 
+
+```{r, ScatterReparameterisation, fig.pos="h", fig.cap="A reparameterisation for the simple linear regression model of exam marks on coursework marks. Left: The original parameterisation using the raw coursework marks. Right: An alternative parameterisation using coursework marks as percentages.", fig.alt=c("A scatterplot of exam marks against coursework marks (out of 20). The line of best fit has been added as well as the fitted values.","A scatterplot of exam marks against coursework percentage marks. The line of best fit has been added as well as the fitted values."), fig.show='hold', out.width="48%"}
+
+# Scatterplot for model 1
+    plot(ex ~ cw, xlab="Coursework mark (out of 20)", ylab="Exam mark (out of 100)", 
+         xlim=c(0,20), ylim=c(35,100), col="navy", pch=16, data=Exam)
+    abline(model1, col="gray20")
+    exam1.fit <- fitted(model1)
+    points(exam1.fit ~ cw, col="darkred", pch=18, data=Exam)
+    legend("bottomright", c("observed response", "fitted values for model 1"), 
+           pch=c(1, 18), col=c("navy", "darkred"))
+    
+# Scatterplot for model 2   
+    Exam$cwp <- 5*Exam$cw
+    model2 <- lm(ex ~ cwp, data=Exam)
+    exam2.fit <- fitted(model2)
+    plot(ex ~ cwp, xlab="Coursework mark (out of 100)", ylab="Exam mark (out of 100)", 
+         xlim=c(0,100), ylim=c(35,100), col="navy", pch=16, data=Exam)
+    abline(model2)
+    points(exam2.fit ~ cwp, col="darkred", pch=18, data=Exam)
+    legend("bottomright", c("observed response", "fitted values for model 2"), 
+           pch=c(16, 18), col=c("navy", "darkred"))
+```
+
+\newpage
+
+<!--- Question 10 --->
+
+Next let us compare the estimated coefficients for the two parameterisations. As shown in Table 1 below, the estimated intercept has not changed. But, since the marks have been multiplied by 5, the estimated slope of Model 2 is 1/5 the size of the estimated slope of Model 1.
+
+
+```{r, message=FALSE}
+require(kableExtra)
+model.coef <- data.frame(coef(model1), coef(model2))
+colnames(model.coef) <- c("Model 1", "Model 2")
+rownames(model.coef) <- c("intercept coefficient", "coefficient for coursework mark (cw)")
+kable(round(model.coef,2), caption="Estimated coefficients for the two alternative parameterisations. 
+      Model 1 uses coursework marks out of 20 while Model 2 uses coursework marks in percentages.")
+```
+
+
