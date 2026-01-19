@@ -16,6 +16,7 @@ library(readr)
 # Coursework and exam performance
 
 ## Question 1
+
 ```{r DataInput, echo=FALSE}
 # Data
 Exam <- read_csv("../data/Exam.csv", show_col_types = FALSE)
@@ -24,6 +25,7 @@ print(summary(Exam))
 ```
 
 ## Question 2 and 3
+
 ```{r Scatterplot, fig.cap=""}
 plot(ex ~ cw, xlab="Coursework mark (out of 20)", 
       ylab="Exam mark (out of 100)",
@@ -44,30 +46,36 @@ abline(model1, col="gray20")
 ```
 
 ## Question 4
+
 ```{r}
 coef(model1)
 ```
 
 ## Question 5
+
 ```{r}
 predict(model1, newdata = list(cw = 10))
 ```
 
 ## Question 6
+
 ```{r}
 lowest_mark <- as.numeric((40-coef(model1)[1]) / coef(model1)[2])
 print(lowest_mark)
 ```
+
 ```{r}
 predict(model1, newdata = list(cw = lowest_mark))
 ```
 
 ## Question 7
+
 ```{r}
 predict(model1, newdata = list(cw = 20))
 ```
 
 ## Question 8 and 9
+
 ```{r}
 Exam$cwp <- 5*Exam$cw
 model2 <- lm(ex ~ cwp, data=Exam)
@@ -96,6 +104,7 @@ legend("bottomright", c("observed response", "fitted values for model 2"),
 ```
 
 ## Question 10
+
 ```{r}
 print("Model 1:")
 print(coef(model1))
