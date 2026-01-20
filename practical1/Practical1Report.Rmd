@@ -21,7 +21,13 @@ library(readr)
 # Data
 Exam <- read_csv("../data/Exam.csv", show_col_types = FALSE)
 print(head(Exam))
+print(is.na(Exam))
+```
+
+```{r DataVisual, echo=FALSE}
 print(summary(Exam))
+hist(Exam$cw)
+hist(Exam$ex)
 ```
 
 ## Question 2 and 3
