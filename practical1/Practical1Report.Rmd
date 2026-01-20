@@ -34,8 +34,8 @@ hist(Exam$ex)
 
 ```{r Scatterplot, fig.cap=""}
 plot(ex ~ cw, xlab="Coursework mark (out of 20)", 
-      ylab="Exam mark (out of 100)",
-      xlim=c(0,20), ylim=c(35,100), col="navy", pch=16, data=Exam)
+     ylab="Exam mark (out of 100)",
+     xlim=c(0,20), ylim=c(35,100), col="navy", pch=16, data=Exam)
 ```
 
 ```{r Scatterplot and fit, fig.cap=""}
