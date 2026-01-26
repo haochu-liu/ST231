@@ -1,0 +1,231 @@
+---
+title: "Practical Report 2"
+output:
+  pdf_document:
+    keep_tex: true
+    fig_caption: true
+    highlight: monochrome
+  html_document:
+    df_print: paged
+    code_folding: hide
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="70%")} else {opts_chunk$set(echo=TRUE)}
+```
+
+
+# Acceptable residual plots
+
+In this practical we will explore simulated data to illustrate residual diagnostics which are part of the linear modelling process. Residual plots allows us to judge the appropriateness of the assumption of linearity and homoscedasticity. 
+
+<!--- Section 1, Question 1 --->
+
+
+```{r, Data1}
+# Set a seed to make simulations reproducible
+set.seed(2302) 
+# Sample Dataset 1
+x <- 1:100
+y <- 3 + 0.5*x + rnorm(100, 0, 2)
+```
+
+We produce an artificial dataset in which the explanatory variable takes integer values from 1 to 100. The response observations are simulated from the linear model
+$$Y_j \quad = \quad  3 + \frac{1}{2}x_j + \epsilon_j, \qquad j=1,\ldots, 100$$
+where $\epsilon_1, \ldots, \epsilon_{100}$ are iid $N(0, 4)$.^[Remember `rnorm` uses the standard deviation and not the variance as an argument!]
+
+
+<!--- Section 1, Question 2 --->
+```{r, SLR1, fig.cap="Scatterplot of Dataset 1 with line of best fit.", fig.alt="Scatterplot of Dataset 1 with line of best fit. The fitted regression lines shows a good fit to the data."}
+# Fit a simple linear regression
+model1 <- lm(y ~ x)
+# Scatterplot with line of best fit
+plot(x, y)
+abline(model1, col="blue", lwd=1.5)
+# Coefficients of fitted model
+# coef(model1)
+```
+The figure above shows a scatterplot of the data together with the line of best fit.
+
+<!--- Comment on how the estimated parameters compared to the ones used to simulate the data. --->
+
+For the line of best fit the intercept is equal to `r round(coef(model1)[1],2)` and the slope is equal to `r round(coef(model1)[2],2)`, both rounded to two decimal places. The estimated intercept and slope are reasonably close to the true parameter values of 3 and 0.5 for the intercept and slope respectively.
+
+
+<!--- Section 1, Question 3 --->
+```{r Residual1, fig.cap="Residual plot for the simple linear regression model fitted to Dataset 1.", fig.alt="Residual plot for the simple linear regression model fitted to Dataset 1. The residual plot is a null plot, that is, it shows no evidence of any violations of the model assumptions."}
+# Residual plot for model 1
+plot(model1, 1, lwd=1.5)
+```
+
+<!--- Comment on the residual plot-->
+In the residual plot shown in Figure 2,  the residuals scatter along a horizontal line at zero (as also indicated by the smoother) and the variation of the residuals appears relatively constant as we move along the x-axis. The residual plot is therefore a null plot that shows no evidence of violations against the assumptions of linearity and homoscedasticity.
+
+<!--- Section 1 Question 4 --->
+
+Next, we sample Dataset 2 from the same linear model as earlier, but this time we only produce $n=20$ observations. We fit a simple linear regression model which is illustrated in Figure 5. 
+
+```{r, LinearModel2, fig.show="hold", out.width="49%", fig.cap="Left: Scatterplot of Dataset 2 with the fitted regression line. Right: Residual plot of the fitted simple linear regression model.", fig.alt=c("Scatterplot of Dataset 2 with the fitted regression line. The regression lines is a reasonably good fit to the data.","Residual plot of the fitted simple linear regression model. The smoother shows some mild curvature and the residuals seem to a litte further spread for intermediate fitted values. Further comments on plot in main text.")}
+# Sample Dataset 2
+set.seed(1184) 
+x2 <- 1:20
+y2 <- 3 + 0.5*x2 + rnorm(20, 0, 1)
+# Fit linear model
+model2 <- lm(y2 ~ x2)
+# Produce scatterplot with line of best fit
+plot(y2 ~ x2)
+abline(model2, col="blue", lwd=1.5)
+# Produce residual plot 
+plot(model2, 1, sub.caption="", lwd=1.5) 
+# I removed the subcaption to make the figures align horizontally.
+```
+
+The scatterplot of the data shows that the regression line is a good fit to the data. In the residual plot, the smoother shows some mild curvature and the residuals appear to vary less for small and for large fitted values and more for immediate values. But we know that the data was sampled from a linear model and thus that the model assumptions are satisfied. 
+This illustrates that, in general, it is harder to tell if the assumptions are appropriate when the dataset contains fewer datapoints. As a follow-on exercise you might like to experiment with increasing the variance of the errors to produce datasets where the correlation between the predictor variable and the response variable is smaller. This will give you further experience in judging residual plots. 
+
+
+# Unacceptable residual plots
+
+The figure below shows the scatterplot of Dataset 3, a dataset sampled from the model
+\[ Y_j \quad = \quad 10 + \frac{1}{2}x_j + \epsilon_j,\]
+where $x_j = j$ and $\epsilon_j \sim N(0, x_j)$ for $j=1, \ldots, 100$. Furthermore, the errors $\epsilon_1, \ldots, \epsilon_{100}$ are independent. We fitted a simple linear regression model to the data and added the fitted line to the scatterplot.
+
+
+
+```{r, data, fig.cap="Scatterplot of Dataset 3. Added to the plot is the line of best fit.", fig.alt="Scatterplot of Dataset 3. While the fitted  regression line provides a good fit, the variation of the observations along the fitted line is increasing."}
+# Set a seed to make simulations reproducible
+set.seed(1285)
+# Sample the dataset
+x <- seq(1, 100, length.out=100)
+y <- 10 + 0.5*x + rnorm(100, 0, sqrt(x))
+# Produce a scatterplot
+plot(x,y)
+# Fit a simple linear regression model and add to the plot
+model1 <- lm(y ~ x)
+abline(model1, col="blue", lwd=1.2)
+```
+
+<!--- Section 1, Question 2 --->
+
+From the model equations we note that the variance of the errors is not constant but linear in the explanatory variable. Thus the assumption of homoscedasticity is violated. We expect the residual plot to have a right-opening megaphone-like shape as the relationship between the response variable and explanatory variable is increasing and so the variance of the response increases with the explanatory variable. This is confirmed in the residual plot in Figure 5.
+
+```{r ResidualPlot1, fig.cap="Residual plot of the simple linear regression model fitted to Dataset 3. The plot shows evidence of heteroscedasticity.", fig.alt="The residual plot shows the residuals being distributed relatively evenly on either side of horizontal line at zero, but the average distance from that line increases as we move along the x-axis.", out.width="55%"}
+plot(model1, 1, lwd=1.2)
+```
+
+
+
+<!--- Section 1, Question 3 --->
+
+To address the issue of an increasing variance we may transform the response variable. Given the response values are all positive, we can apply a square root (sqrt) transform or a log transform to the response. We explore both transformations below.
+
+Figure 6 shows the results of fitting a simple linear regression of the sqrt-transformed response on the explanatory variable. We observe that the issue of heteroscedasticity has improved with the variation of the residuals being more constant across the range of fitted values. The smoother in the residual plot shows some non-linearity. Figure 7 shows the results after log-transforming the response. This has further improved the non-constant variance issue, but appears to have increased the non-linearity. 
+
+
+
+```{r, Transformation1, fig.show="hold", out.width="49%", fig.cap= "Plots for Dataset 3 after a sqrt-transformation of the response. Left: Scatterplot of the data with fitted regression line. Right: Residual plot of the fitted model.", fig.alt=c("Scatterplot of the log-transformed response against the explanatory variable. The relationship between the explanatory variable looks relatively linear and so the fitted regression line is  an adequate description of the data. Also the variation of observations shows less evidence of heteroscedasticity.", "Residual plot of the fitted model. Taking a sqrt-transform of the response variable has reduced the earlier heteroscedasticity although not entirely resolved it. Also, there is possibly a hint of non-linearity in the residual plot.")}
+plot(x, sqrt(y))
+model2 <- lm(sqrt(y) ~ x)
+abline(model2, col="blue", lwd=1.2)
+plot(model2, 1, lwd=1.2)
+```
+
+```{r, Transformation2, fig.show="hold", out.width="49%", fig.cap= "Plots for Dataset 3 after log-transforming the response. Left: Scatterplot of the data. Right: Residual plot of the fitted model.", fig.alt=c("Scatterplot of the log-transformed response against the explanatory variable. The relationship between the explanatory variable looks non-linear and so the fitted regression line is not an adequate description of the data. However, the variation of observations appears relatively constant as we move from left to right.", "Residual plot of the fitted model. While log-transforming the response variable has reduced the earlier heteroscedasticity the residual plot shows a curved pattern as we move along the x-axis. Linearity does not seem a reasonable assumption.")}
+plot(x, log(y))
+model3 <- lm(log(y) ~ x)
+abline(model3, col="blue", lwd=1.2)
+plot(model3, 1, lwd=1.2)
+```
+
+```{r, Transformation3, fig.show="hold", out.width="49%", fig.cap= "Residual plots without smoother. Left: Residual plot for the model based on the sqrt-transformed response. Right: Residual plot for the model based on the log-transformed response.", fig.alt=c("Residual plot of the model based on the sqrt-transformed response - smoother omitted from plot. The residual plot shows some  mild non-linearity.","Residual plot of the model based on the log-transformed response - smoother omitted from plot. The residual plot shows some more pronounced non-linearity."), eval=F}
+plot(model2, 1, add.smooth=FALSE)
+plot(model3, 1, add.smooth=FALSE)
+```
+
+\newpage
+**Comments: Linearity is a more important assumption than homoscedasticity. Thus, if we cannot resolve the heteroscedasticity without the linearity assumption becoming unreasonable, then we choose a model for which the linearity assumption is reasonable, even if it suffers from heteroscedasticity. In this example, as the data was simulated, we  know that the un-transformed data had a linear relationship. But after transformation, we observed evidence of non-linearity in Figures 6 and 7. So it is important to note that transforming the response affects the relationship between the response and the explanatory variables and thus may cause issues with non-linearity. In practice, we do not know a priori what the relationship between the response and the explanatory variable(s) is and so can only judge from scatterplots and residual plots. It is not unusual for heteroscedasticity to occur together with non-linearity and so a transform of the response might resolve both. So if we observe both non-linearity and heteroscedasticity, we normally try to resolve the heteroscedasticity first before attempting to address the non-linearity.**
+
+
+<!--- Section 2 Question 3 --->
+<!--- Dataset 4--->
+
+Our final artificial dataset is sampled from the model 
+\[ Y_j \quad = \quad 100 - 20 x_j  + x_j^2 + \epsilon_j,\]
+where $\epsilon_1, \ldots, \epsilon_{100}$ are iid $N(0, 400)$. 
+
+```{r, data4,  fig.cap="Scatterplot of Dataset 4.", fig.alt="Scatterplot of Dataset 4. The points appear to scatter around a parabola."}
+# Sample Dataset 4
+set.seed(1066)
+x <- seq(0.25, 25, by=0.25)
+y <- 100 - 20*x + x^2 + rnorm(100, 0, 20)
+# Produce a scatterplot of the dataset
+plot(x, y)
+```
+In Figure 8 we observe  a non-linear relationship between the explanatory variable and the response variable. The relationship is non-monotone as it is initially decreasing but then, at around $x=10$, becomes increasing.
+
+<!--- Section 2, Question 6 --->
+<!--- Computing deviances --->
+
+```{r, deviance}
+# Fit a simple linear regression model to Dataset 4 and compute its deviance
+model4a <- lm(y ~ x)
+D1 <- deviance(model4a)
+# Fit a quadratic regression model and compute its deviance
+model4b <- lm(y ~ x + I(x^2))
+D2 <- deviance(model4b)
+```
+
+A simple linear regression model fitted to this dataset has a deviance of `r round(D1)`.
+A quadratic regression model fitted to this dataset has a deviance of `r round(deviance(model4b))`. Hence, the deviance of the simple linear regression model is larger than that of the quadratic regression model. More generally, if we have two models $M_1$ and $M_2$ where $M_1$ is based on a subset of the explanatory variables used in $M_2$, then the deviance of $M_2$ will be less than or equal to that of $M_1$. As $M_1$ is based on a subset of the explanatory variables used in $M_2$, we say $M_1$ is nested in $M_2$.
+
+<!--- Section 2, Question 7 --->
+<!--- Residual plots of the simple linear regression model and the quadratic regression model --->
+
+```{r, ResidualPlots4, fig.show="hold", out.width="49%", fig.cap="Left: Residual plot of the simple linear regression model fitted to Dataset 4. Right: Residual plot of the quadratic regression model fitted to Dataset 4.",  fig.alt=c("The residual plot of the simple linear regression model fitted to Dataset 4. The smoother resembles a parabola rather than a horizontal line. Further comments in main text.","The residual plot of the quadratic regression model fitted to Dataset 4. This residual plot is a null plot. Further comments in main text.")}
+# Residual plot of the simple linear regression model 
+plot(model4a, 1, lwd=1.5)
+# Residual plot of the quadratic regression model
+plot(model4b, 1, lwd=1.5)
+```
+
+The residual plot of the simple linear regression model is shown on the left in Figure 9 and presents strong evidence of non-linearity as the smoother is shaped like a parabola. The assumption of constant variance, however, seems not unreasonable. The residual plot of the quadratic regression model shown on the right in Figure 9 is a null plot. The smoother resembles a horizontal line and the variation of the residuals does not appear to depend on the fitted values. We conclude that while the simple linear regression model demonstrates a violation of the linearity assumption, for the quadratic regression model the assumption of linearity and homoscedasticity are reasonable. 
+
+<!-- Section 2, Question 8 and 9: Plotting the quadratic regression model --->
+
+We make use of the  function `quadraticPlot` to visualise the quadratic regression model. 
+```{r, Quadratic, echo=TRUE}
+
+quadraticPlot <- function(x,y){
+  # Produce a scatterplot of the data
+  plot(x, y, xlab="x", ylab="y", main="Scatterplot")
+  # Fit a quadratic regression model
+  m <- lm(y ~ x + I(x^2))
+  # Create a vector ax of length 101 
+  # spanning the range of the explanatory variable
+  ax<-seq(min(x), max(x), length.out=101)
+  # predict the response for each value in ax
+  fitted.curve<-predict(m, newdata=list(x=ax))
+  # Fit a curve through the predicted response values and 
+  # add to this to the plot
+  lines(ax, fitted.curve, col="navy", lwd=2) 
+}
+```
+
+```{r data3quadratic, fig.cap= "Scatterplot of Dataset 4 with the fitted quadratic regression curve.", fig.alt="Scatterplot of the response against the explanatory variable with the fitted quadratic curve which provides a good fit to the data."}
+# Apply the quadraticPlot function to the quadratic regression model fitted earlier
+quadraticPlot(x,y)
+```
+
+
+Figure 10 shows that the quadratic regression model provides a good fit to the data in Dataset 4.
+
+<!--- Section 2, Question 10 --->
+
+To interpret the coefficient $\beta_1$ in a multiple regression model with two explanatory variables 
+\[ Y_j \quad = \quad \beta_0 + \beta_1 x_{j1} + \beta_2\, x_{j2}^2 + \epsilon_j, \qquad j = 1, \ldots, n, \]
+we consider the increase in the average response when increasing the value of $x_{j1}$ by one unit while keeping the value of $x_{j2}$ fixed. However, in a quadratic regression model
+\[ Y_j \quad = \quad \beta_0 + \beta_1 x_j + \beta_2 x_j^2 + \epsilon_j, \qquad j = 1, \ldots, n. \]
+we cannot increase the value of $x_j$ without simultaneously increasing the value of $x_j^2$. Hence in the quadratic regression model $\beta_1$ and $\beta_2$ should not be interpreted individually. 
