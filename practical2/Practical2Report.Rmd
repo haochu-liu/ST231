@@ -120,14 +120,14 @@ plot(model3, 1)
 
 ## Section 1, Question 2
 
-```{r, data3, fig.cap=""}
+```{r, model3_sqrt, fig.cap=""}
 plot(x3, sqrt(y3))
 model3_sqrt <- lm(sqrt(y3) ~ x3)
 abline(model3_sqrt, col="blue", lwd=1.2)
 plot(model3_sqrt, 1, lwd=1.2)
 ```
 
-```{r, data3, fig.cap=""}
+```{r, model3_log, fig.cap=""}
 plot(x3, log(y3))
 model3_log <- lm(log(y3) ~ x3)
 abline(model3_log, col="blue", lwd=1.2)
