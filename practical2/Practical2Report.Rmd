@@ -45,11 +45,7 @@ abline(model1, col="blue")
 coef(model1)
 ```
 
-We can see that the estimated intercept and slope are reasonably close to the true parameter, 3 and 0.5. We can double-check this by the 95% confidence intervals.
-
-```{r CI_model1}
-confint(model1)
-```
+We can see that the estimated intercept and slope are reasonably close to the true parameter, 3 and 0.5.
 
 ## Section 1, Question 3
 
@@ -79,19 +75,6 @@ plot(model2, 1)
 ```
 
 Harder to tell if satisfying the model assumptions. We can see some curvature and uneven variance of the residuals even if the data is sampled from a linear model.
-
-*Question: how the confidence intervals change?*
-
-```{r CI_model2}
-confint(model2)
-```
-
-```{r compare_CI}
-print(paste0("model2 intercept CI length: ", confint(model2)[1, 2] - confint(model2)[1, 1]))
-print(paste0("model2 slop CI length: ", confint(model2)[2, 2] - confint(model2)[2, 1]))
-print(paste0("model1 intercept CI length: ", confint(model1)[1, 2] - confint(model1)[1, 1]))
-print(paste0("model1 slop CI length: ", confint(model1)[2, 2] - confint(model1)[2, 1]))
-```
 
 # Unacceptable residual plots
 
