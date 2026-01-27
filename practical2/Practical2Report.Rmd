@@ -80,7 +80,7 @@ plot(model2, 1)
 
 Harder to tell if satisfying the model assumptions. We can see some curvature and uneven variance of the residuals even if the data is sampled from a linear model.
 
-Question to think: how the confidence intervals change?
+*Question: how the confidence intervals change?*
 
 ```{r CI_model2}
 confint(model2)
@@ -138,9 +138,7 @@ plot(model3_log, 1, lwd=1.2)
 
 ## Section 2 Question 3
 
-Our final artificial dataset is sampled from the model
-$$ Y_j \quad = \quad 100 - 20 x_j  + x_j^2 + \epsilon_j,$$
-where $\epsilon_1, \ldots, \epsilon_{100}$ are iid $N(0, 400)$.
+Our final artificial dataset is sampled from the model $$ Y_j \quad = \quad 100 - 20 x_j  + x_j^2 + \epsilon_j,$$ where $\epsilon_1, \ldots, \epsilon_{100}$ are iid $N(0, 400)$.
 
 ```{r, data4, fig.cap="Scatterplot of Dataset 4."}
 # Dataset 4
@@ -154,6 +152,7 @@ plot(x, y)
 ## Section 2, Question 4
 
 $$ Y_j \quad = \quad \beta_0 + \beta_1 x_{j} + \epsilon_j. $$
+
 ```{r linear_model4}
 # Fit simple linear regression model and produce residual plot 
 plot(x, y)
@@ -163,6 +162,7 @@ plot(model4_linear, 1, lwd=1.2)
 ```
 
 $$ Y_j \quad = \quad \beta_0 + \beta_1 x_{j} + \beta_2\, x_{j}^2 + \epsilon_j. $$
+
 ```{r quadratic_model4}
 # Fit quadratic regression model and produce residual plot
 model4_quadratic <- lm(y ~ x + I(x^2))
@@ -201,9 +201,8 @@ This scatterplot shows that the quadratic regression model provides a good fit t
 
 ## Section 2, Question 7
 
-Consider
-$$ Y_j \quad = \quad \beta_0 + \beta_1 x_{j} + \beta_2\, x_{j}^2 + \epsilon_j, \qquad j = 1, \ldots, n. $$
-One unit change of $x_j$ will affect both $\beta_1$ and $\beta_2$. Hence $\beta_1$ and $\beta_2$ should not be interpreted individually.
+Consider $$ Y_j \quad = \quad \beta_0 + \beta_1 x_{j} + \beta_2\, x_{j}^2 + \epsilon_j, \qquad j = 1, \ldots, n. $$ One unit change of $x_j$ will affect both $\beta_1$ and $\beta_2$. Hence $\beta_1$ and $\beta_2$ should not be interpreted individually.
+
 ```{r summary_model4}
 coef(model4_quadratic)
 ```
