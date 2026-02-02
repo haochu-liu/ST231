@@ -1,0 +1,118 @@
+---
+title: "Practical Report 3"
+output:
+   pdf_document: 
+     keep_tex: true
+     fig_caption: yes
+     highlight: monochrome
+   html_document:
+    df_print: paged
+    code_folding: hide
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="70%")} else {opts_chunk$set(echo=TRUE)}
+```
+
+# Case study - Nambe ware
+
+The dataset relates to the production of a sample of $n=58$ tableware products. After casting each piece of tableware goes through a series of grinding and polishing steps. The variables (adapted from the original dataset) are:
+
+- $\tt Diam$: the diameter of the product (in inches);
+- $\tt Time$: the total grinding and polishing time of the product (in minutes).
+
+## Question 2
+
+```{r, NambeWare, fig.cap=""}
+dta <- read.table("../data/Nambe.csv", header=TRUE, sep=",")  
+
+# Histogram of diameter together with kernel density estimate
+hist(dta$Diam, prob=T, xlab="diameter (in inches)", main="")
+lines(density(dta$Diam),lwd=2, col="blue") # Add the density estimate to the current plot.
+legend("topright", legend = "kernel density estimate", lty=1, 
+       lwd=2, col="blue", bty="n")
+
+# Histogram of time together with kernel density estimate
+hist(dta$Time, prob=T, xlab="diameter (in inches)", main="")
+lines(density(dta$Time),lwd=2, col="blue") # Add the density estimate to the current plot.
+legend("topright", legend = "kernel density estimate", lty=1, 
+       lwd=2, col="blue", bty="n")
+```
+
+Both variables appear to have a uni-modal distribution. The distribution of the `Time` variable shows a strong positive skew.
+
+## Question 3 and 4
+
+We have a scatterplot of `Time` against `Diam`. Fitting a simple linear regression of
+$$
+\texttt{Time}_j = \beta_0 + \beta_1 \texttt{Diam}_j + \epsilon_j, \quad j = 1, \dots, 58,
+$$
+we add the line of best fit to the scatterplot, and show its residual plot. In the scatterplot, `Time` generally increases as `Diam` increases. In the residual plot, the smoother shows some very mild non-linearity. And the variance of residual scatters increases and then decrease as the fitted values increase, which indicates the constant variance assumption is violated.
+
+```{r, ScatterplotNambe, fig.show="hold", out.width="48%",fig.cap=""}
+# Scatterplot of the data
+plot(Time ~ Diam, data=dta, 
+     xlab="Diameter (in inches)", 
+     ylab="Grinding and Polishing Time (in minutes)")
+# Add line of best fit
+model1 <- lm(Time ~ Diam, data=dta)
+abline(model1, col="blue", lwd=1.2)
+# Residual plot for fitted model
+plot(model1, 1, lwd=1.2)
+```
+
+## Question 5 and 6
+From (1), if we take log on both side, we get
+$$
+\begin{align}
+\text{time} &= a \times \text{diameter}^b\\
+\log(\text{time}) &= \log(a) + b \log(\text{diameter}).
+\end{align}
+$$
+Hence, we consider fitting a linear model with
+$$
+\log(\text{time}_j) = \beta_0 + \beta_1 \log(\text{diameter}_j) + \epsilon_j, \quad j = 1, \dots, 58.
+$$
+```{r, ResidualPlotLogNambe, fig.cap=""}
+# Fit model
+model2 <- lm(log(Time) ~ log(Diam), data=dta)
+# Residual plot
+plot(model2, 1, lwd=1.2)
+```
+The smoother in the residual plot is fairly horizontal and the variation of the residuals as we
+move along the x-axis appears relatively constant. We say the assumptions of linearity and homoscedasticity are reasonable now.
+
+## Question 7
+```{r, coef_model2}
+coef(model2)
+```
+The coefficient of slope has $\hat{\beta}_1 =$  `r round(coef(model2)[2],3)`. Recall that
+$$
+\text{time}_j = \exp(\beta_0) \times \text{diameter}_j^{\beta_1} + \exp(\epsilon_j).
+$$
+With an increase in diameter by a factor of 1.2, the predicted grinding and polishing time increases by a factor of $1.2^{\hat{\beta}_1} =$  `r round(1.2^coef(model2)[2],2)`.
+
+## Question 8
+For a product of 15 inches diameter we expect a total grinding and polishing time 
+```{r, pred_model2}
+exp(predict(model2, list(Diam=15)))
+```
+
+## Question 9
+```{r, NambeLogModel, eval=FALSE, fig.cap=""}
+# Scatterplot of the data
+plot(Time ~ Diam, data=dta, xlab="Diameter (in inches)", 
+     ylab="Grinding and Polishing Time (in minutes)")
+# Add titted model (in original scale of the data)
+ax <- seq(min(dta$Diam), max(dta$Diam), length.out=101)
+fitted.curve <- exp(predict(model2, newdata=list(Diam=ax)))
+lines(ax, fitted.curve, col="navy", lwd=2)
+```
+
+As $\hat{\beta}_1$ is close to one, this is almost a linear function in `Diam`. Therefore, in the scatterplo, the fitted model resembles a straight line.
+
+## Question 10
+Although the simple linear regression and the linear regression of `log(Time)` and `log(Diam)` shows similar trend and predictions, the later model satisfies homoscedasticity assumption.
