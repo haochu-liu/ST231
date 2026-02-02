@@ -1,0 +1,116 @@
+---
+title: "Practical Report 3"
+output:
+  pdf_document:
+    keep_tex: true
+    fig_caption: true
+    highlight: monochrome
+  html_document:
+    df_print: paged
+    code_folding: hide
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%")} else {opts_chunk$set(echo=TRUE)}
+```
+
+
+
+# Case study - Nambe ware
+
+The dataset relates to the production of a sample of $n=58$ tableware products. After casting each piece of tableware goes through a series of grinding and polishing steps. The variables (adapted from the original dataset) are:
+
+- $\tt Diam$: the diameter of the product (in inches);
+- $\tt Time$: the total grinding and polishing time of the product (in minutes).
+    
+<!--- Section 2, Question 1 --->
+
+```{r Histogram, fig.cap="Histograms and density estimates for the Nambe dataset. Left: Histogram of diameters. Right: Histogram for the grinding and polishing time.", fig.alt=c("Histogram for the diameter of product in the Nambe dataset. The histogram shows a mild skew.", "Right: Histogram for the grinding and polishing time in the Nambe dataset. The histogram shows a heavy right skew."), out.width="49%", fig.show="hold", echo=FALSE}
+dta <- read.table("Nambe.csv", header=TRUE, sep=",") 
+hist(dta$Diam, prob=T, xlab="diameter (in inches)", main="")
+lines(density(dta$Diam),lwd=2, col="blue")
+legend("topright", legend = "kernel density estimate", lty=1, 
+       lwd=2, col="blue", bty="n")
+hist(dta$Time, prob=T, xlab="grinding and polishing time (in minutes)", main="")
+lines(density(dta$Time),lwd=2, col="blue")
+legend("topright", legend = "kernel density estimate", lty=1, 
+       lwd=2, col="blue", bty="n")
+```
+Figure 1 shows histograms for the two variables together with the corresponding kernel density estimates. Both variables appear to have a uni-modal distribution. The distribution of the $\tt Time$ variable shows a strong positive skew.
+
+**Note that the shape of a histogram is influenced by the number of bins. The number of bins should balance between revealing the systematic shape of the histogram and not being too heavily influenced by random fluctuations. Similar considerations apply to the choice of bandwidth for the kernel density estimate.** 
+
+<!--- Section 2, Question 2 and Question 3 --->
+
+The left plot in Figure 2 shows a scatterplot of $\tt Time$, the processing time, against $\tt Diam$, the diameter of the product. The right plot in Figure 2 shows a residual plot of the simple linear regression model of time on diameter. The smoother shows some very mild non-linearity and so the linearity assumption is not unreasonable. However, the residuals are arranged in a right-opening megaphone-like shape. Thus there is evidence that the constant variance assumption is violated.
+
+```{r, NambeWare, fig.show="hold", out.width="49%", fig.cap="Left: Scatterplot of grinding and polishing time for a product against the diameter of the product. Added to the plot is the line of best fit. Right: Residual plot for the simple linear regression model of time on diameter.", fig.alt=c("Scatterplot of time against the diameter. Added to the plot is the line of best fit. The average distance between the observations and the fitted line is increasing with diameter.", "Residual plot for the simple linear regression of time on diameter. While the smoother is resembles a horizontal line, the residuals are arranged in a megaphone-like shape.")}
+
+plot(Time ~ Diam, data=dta, 
+     xlab="Diameter (in inches)", 
+     ylab="Grinding and Polishing Time (in minutes)")
+
+model1 <- lm(Time ~ Diam, data=dta)
+abline(model1, col="blue", lwd=1.2)
+plot(model1, 1, lwd=1.2)
+```
+
+
+<!--- Section 2, Question 4 --->
+
+Consider the simple linear regression model
+\[ \log(\textrm{Time}_j) \quad = \quad \alpha + \beta \log(\textrm{Diam}_j) + \epsilon_j, \qquad \mbox{ for } j=1, \ldots, 58.\]
+Note that in this model the errors are additive.
+Exponentiating this model gives a model where the systematic component is of the form suggested by the engineer
+\[ \textrm{Time}_j \quad = \quad \exp(\alpha) \times \textrm{Diam}_j^{\beta} \times \exp(\epsilon_j),  \qquad \mbox{ for } j=1, \ldots, 58.\]
+Note that on this scale the errors are multiplicative.   
+
+<!--- Section 2, Question 5 --->
+
+```{r, ResidualPlotLogNambe, fig.cap="Residual plot for the linear model based on log-transformed variables.", fig.alt="Residual plot for the linear model based on log-transformed variables. The smoother in the residual plot is fairly horizontal and the variation of the residuals as we move along the x-axis appears relatively constant.",}
+
+model2 <- lm(log(Time) ~ log(Diam), data=dta)
+plot(model2, 1, lwd=1.2)
+```
+
+Figure 3 shows the residual plot for the regression model of $\tt log(Time)$ on $\tt log(Diam).$
+The smoother in the residual plot is fairly horizontal and the variation of the residuals as we move along the x-axis appears relatively constant as most observation lie in a horizontal band around the smoother. Therefore the assumptions of linearity and homoscedasticity are reasonable. 
+
+
+<!--- Section 2, Question 6 --->
+
+Say we consider an increase in diameter by a factor of 1.2. We could consider other increases, but a 20% increase seems sensible in the given context and avoids extrapolation beyond the range of the data. 
+The estimated slope is $\widehat{\beta} =$ `r round(coef(model2)[2],3)`, thus with an increase in diameter by a factor of 1.2, the predicted grinding and polishing time increases by a factor of $1.2^{\widehat{\beta}} =$  `r round(1.2^coef(model2)[2],2)`.  
+
+<!--- Section 2, Question 7 --->
+
+For a product of 15 inches diameter we expect a total grinding and polishing time of about `r round(exp(predict(model2, list(Diam=15))), 0)` minutes. 
+
+**Note that if you wanted to report the estimated seconds too, you will need to be careful with the conversion. 44.28 minutes correspond to 44 minutes and 17 seconds.**
+  
+<!--- Section 2, Question 8 --->
+
+```{r, NambeLogModel,  fig.cap="Scatterplot of time against diameter. Added to the plot is a curve showing the predicted time for grinding and polishing as a function of diameter based on the linear regression model of log-time on log-diameter.", fig.alt="Scatterplot of time against diameter. Added to the plot is a curve showing the predicted time for grinding and polishing as a function of diameter based on the linear model using log-transformed variables. The curve resembles a straight line."}
+# Scatterplot of the data
+plot(Time ~ Diam, data=dta, xlab="Diameter (in inches)", 
+     ylab="Grinding and Polishing Time (in minutes)")
+
+# Fitted model (in original scale of the data)
+ax <- seq(min(dta$Diam), max(dta$Diam), length.out=101)
+fitted.curve <- exp(predict(model2, newdata=list(Diam=ax)))
+lines(ax, fitted.curve, col="navy", lwd=2)
+```
+
+
+The predicted time as a function of diameter is given by 
+\[ \widehat{\textrm{Time}} \quad = \quad  \exp(\widehat{\alpha}) \times \textrm{Diam}^{\widehat{\beta}}.\]
+As $\widehat{\beta}$ is close to one, this is almost a linear function in `Diam`. Therefore, in the scatterplot in Figure 8, the fitted model resembles a straight line. 
+
+
+
+<!--- Section 2, Question 9 --->
+
+While both a simple linear regression of time on diameter and a simple linear regression of log-time on log-diameter produce similar predictions, the former suffers from heteroscedasticity as is  evident in the residual plot in Figure 2. This is resolved after log-transforming both the predictor and the response variable. 
