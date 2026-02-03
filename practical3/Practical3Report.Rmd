@@ -27,7 +27,7 @@ The dataset relates to the production of a sample of $n=58$ tableware products. 
 <!---  Question 1 --->
 
 ```{r, NambeWare, fig.cap=""}
-dta <- read.table("Nambe.csv", header=TRUE, sep=",")  
+dta <- read.table("../data/Nambe.csv", header=TRUE, sep=",")  
 
 # Histogram of diameter together with kernel density estimate
 hist(dta$Diam, prob=T, xlab="diameter (in inches)", main="")
