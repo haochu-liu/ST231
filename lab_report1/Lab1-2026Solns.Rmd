@@ -39,9 +39,9 @@ In the following you will explore the relationship between the weight of a diamo
 
 **Feedback:**
 
-1.  R markdown syntax and cheat sheet.
-2.  Hide code blocks, `echo=FALSE`.
-3.  `fig.cap`
+1.  Hide code blocks, `echo=FALSE`.
+2.  `fig.cap`
+3.  R markdown syntax and cheat sheet.
 4.  Question 2 and 3
 
 **Solutions:**

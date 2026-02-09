@@ -17,30 +17,27 @@ pdf_doc <- knitr::is_latex_output()
 if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%")} else {opts_chunk$set(echo=TRUE)}
 ```
 
-
-
 # Sampling distributions
 
-In the following we consider a simple linear regression model. We set $n=50$, $\boldsymbol{\beta}^T = (1 \; 2)$ and $\sigma^2=1$. 
+In the following we consider a simple linear regression model. We set $n=50$, $\boldsymbol{\beta}^T = (1 \; 2)$ and $\sigma^2=1$.
 
-<!---  Question 1--->
+## Question 1
 
-The model equations for the true linear model are given by 
-$$Y_j \quad = \quad$$
-where $j=1, \ldots,$ and $\epsilon_1, \ldots, \epsilon_50$ are iid $N(0, )$. 
+The model equations for the true linear model are given by $$Y_j \quad = \quad 1 + 2 x_j + \epsilon_j$$ where $j=1, \ldots,$ and $\epsilon_1, \ldots, \epsilon_{50}$ are iid $N(0, 1)$.
 
-<!---  Question 2--->
+## Question 2
 
 We start by producing a set of values for the explanatory variable.
+
 ```{r, PredictorValues}
 # Set predictor values
 set.seed(4)
 x <- runif(50,-2,2)
 ```
 
-<!---  Question 3 --->
+## Question 3
 
-We sample a realisation of the error vector which has a .... distribution and use the error vector to produce a realisation of the response vector from the true model. Together with the values for the explanatory variable this forms Dataset 1.
+We then sample a realisation of the error vector which has a multivariate standard normal distribution in $50$ dimension. We use the error vector to produce a realisation of the response vector from the true model. Together with the values for the explanatory variable this forms Dataset 1.
 
 ```{r, ResponseRealisation}
 # Sample response from true model
@@ -48,110 +45,112 @@ error <- rnorm(50, 0, 1)
 y <- 1 + 2*x + error
 ```
 
-<!---  Question 4 --->
+## Question 4
 
 Figure 1 shows a scatterplot of the data together with the line of best fit.
 
 ```{r, SLR1, fig.cap="A scatterplot of Dataset 1 together with the line of best fit."}
 # Fit linear model to data
-
+m <- lm(y ~ x)
 # Plot data
-
+plot(y ~ x, pch=16, xlab="X", ylab="Y", xlim=c(-3,3), ylim=c(-4,6))
 # Add fitted regression line to plot
-
+abline(m, col="blue")
 # Estimated coefficients of fitted model
-
+print(coef(m))
 ```
 
-The estimated intercept is equal to .... and the estimated slope is equal to ..... Both values are close to the true parameters.
+Both estimated coefficients are close to the true parameters.
 
-<!---  Question 5 --->
-<!--- Note that you do not need to write another code chunk to produce the new dataset. You can simply reuse the code chunk as is done below.--->
+## Question 5
 
-We create Dataset 2 by keeping the values of the explanatory variable fixed but sampling a new response vector. 
+*Note that you do not need to write another code chunk to produce the new dataset. You can simply reuse the code chunk as is done below.*
 
-```{r, ResponseRealisation1}
+We create Dataset 2 by keeping the values of the explanatory variable fixed but sampling a new response vector.
+
+```{r, ResponseRealisation}
 ```
 
-<!---  Question 6 --->
+## Question 6
+
 Figure 2 shows a scatterplot of Dataset 2 together with the line of best fit.
 
 ```{r, SLR2, fig.cap="A scatterplot of Dataset 2 together with the line of best fit."}
 # Fit linear model
-
+m <- lm(y ~ x)
 # Plot data
-
+plot(y ~ x, pch=16, xlab="X", ylab="Y", xlim=c(-3,3), ylim=c(-4,6))
 # Add fitted regression line to plot
-
+abline(m, col="blue")
 # Estimated coefficients of fitted model
-
+print(coef(m))
 ```
 
-We note that the estimated regression line in Figure 2 is fairly close, but not identical to the one in Figure 1. The estimated intercept for the model fitted to Dataset 2 is equal to .... and the estimated slope is equal to ..... Both values are close to the estimates for Dataset 1.
+We note that the estimated regression line in Figure 2 is fairly close, but not identical to the one in Figure 1. The estimated intercept for the model fitted to Dataset 2 is equal to `r round(coef(m)[1],2)` and the estimated slope is equal to `r round(coef(m)[2],2)`. Both values are close to the estimates for Dataset 1.
 
-<!---  Question 7 --->
-<!--- Annotate the code below --->
+## Question 7
 
-Next we repeat the experiment 10 times. 
+Next we repeat the experiment 10 times.
 
 ```{r, RepeatedRuns}
 sampling.dist <- function(Nruns=10, seed=4){ 
-#
+# Sample explanatory variable
 set.seed(seed)
 x <- runif(50,-2,2)
-#
+# Set up matrix for estimated coefficients
 betahat <- matrix(NA, Nruns, 2)
-#
+# Iterate Nruns times
 for (j in 1:Nruns){
-  #
+  # Sample the response vector
   error <- rnorm(50, 0, 1)
   y <- 1 + 2*x + error
-  #
+  # Fit a normal linear model 
   m <- lm(y ~ x)
-  #
+  # Record the estimated coefficients
   betahat[j,] <- coef(m)
 }
 return(betahat)}
 # Run the function sampling.dist with Nruns=10 and seed=4
-
+betahat <- sampling.dist()
 ```
 
-<!---  Question 8 --->
+## Question 8
 
-Figure 3 shows the fitted regression lines for our 10 datasets together with the regression line used to sample the data. 
+Figure 3 shows the fitted regression lines for our 10 datasets together with the regression line used to sample the data.
 
 ```{r, Lines, fig.cap="Fitted regression lines for 10 independent samples of the response vector. Also shown is the regression line used to sample the data."}
 plotModels <- function(betahat, Nruns=10, a=1, b=2){
-# 
+# create empty plotting region
 plot(x=NULL, y=NULL, xlab="X", ylab="Y", xlim=c(-2,2), ylim=c(-3,5),
        main=paste(Nruns," samples of size 50"))
-#
+# plot the fitted regression lines
 for (j in 1:Nruns){
     abline(a=betahat[j,1], b=betahat[j,2], col="gray")
     }
-#  
+# add the line for the true model
 abline(a, b, lwd=1.5)
 legend("topleft", lty=1, col=c("gray", "black"), legend=c("estimated regression line", "true regression line"))
 }
 
-# Run the function plotModels using the betahat computed earlier
-
+# Run the function plotModels using the c computed earlier
+plotModels(betahat)
 ```
- 
-<!---  Question 9 --->
 
-<!--- Use the functions sampling.dist and plotModels to repeat the experiment 100 times --->
+## Question 9
+
 Next we repeat the experiment 100 times. Figure 4 shows the results.
 
 ```{r, 100RepeatedRuns, fig.cap="Fitted regression lines for 100 independent samples of the response vector. Also shown is the regression line used to sample the data."}
 # Sample response vector 100 times and fit linear model to each dataset 
-
+betahat <- sampling.dist(Nruns=100)
 # Plot the results
-
+plotModels(betahat, Nruns=100)
 ```
 
-<!--- Question 10 --->
-<!--- Histogram of estimated intercepts--->
+## Question 10
+
+We plot the histogram with estimated density for $\boldsymbol{\widehat{\beta}}_0({\boldsymbol Y})$.
+
 ```{r, HistIntercept, fig.cap="Histogram of estimated intercepts.", eval=F}
 # Histogram of intercepts
 hist(betahat[,1], xlab="Estimated intercept", prob=T,
@@ -164,28 +163,76 @@ lines(density(betahat[,1]),lwd=2, col="blue")
 legend("topleft", legend=c("density estimate", "true intercept"), lty=1, col=c("blue","darkred"))
 ```
 
-<!--- Comment on histogram--->
+Figure 5 shows a histogram of the estimated intercepts. We observe that the distribution (vaguely) resembles a bell-shaped curve and that the true value of the intercept lies roughly in the center of the empirical distribution.
 
-<!---  Question 11 --->
-<!--- Histogram of estimated slopes--->
-```{r, HistSlope, fig.cap=""}
+## Question 11
+
+We plot the histogram with estimated density for $\boldsymbol{\widehat{\beta}}_1({\boldsymbol Y})$.
+
+```{r, HistSlope, fig.cap="Histogram of estimated slopes.", eval=F}
+m2 <- max(density(betahat[,2])$y)
+hist(betahat[,2], xlab="Estimated slope", main="Histogram based on 100 samples", prob=T, ylim=c(0, m2))
+abline(v=2, col="darkred", lwd=3)
+lines(density(betahat[,2]),lwd=2, col="blue")
+legend("topleft", legend=c("density estimate", "true slope"), lty=1, col=c("blue","darkred"))
 ```
-<!--- Comment on histogram--->
 
+As with the estimates of the intercepts, the distribution of the slope estimates in Figure 6 resembles a bell-shaped curve and the true value of the slope lies in the center of the empirical distribution.
 
-<!--- Question 12 a. --->
-<!--- Compute variances of sampling distribution --->
-We can compute the variances of the sampling distribution for the least squares estimator $\boldsymbol{\widehat{\beta}}({\boldsymbol Y})$ as $\sigma^2 \Big(\boldsymbol{X}^T\boldsymbol{X}\Big)^{-1}$. 
+## Question 12 a.
+
+We can compute the variances of the sampling distribution for the least squares estimator $\boldsymbol{\widehat{\beta}}({\boldsymbol Y})$ as $\sigma^2 \Big(\boldsymbol{X}^T\boldsymbol{X}\Big)^{-1}$.
 
 ```{r, CovarianceMatrix}
-
+# Note that sigma^2 = 1
+# Design matrix
+X <- cbind(rep(1, 50), x)
+# Compute covariance matrix
+v <- solve(t(X)%*%X)
+print(v)
 ```
 
-Doing this in `R` we obtain ...
+Doing this in `R` we obtain that the variance of ${\widehat{\beta}}_0({\boldsymbol Y})$ is equal to `r round(v[1,1], 3)` and the variance of ${\widehat{\beta}}_1({\boldsymbol Y})$ is equal to `r round(v[2,2], 3)`.
 
-<!---  Question 12 b. --->
-<!--- Estimate variances of sampling distribution --->
+## Question 12 b.
 
-We can compare these variances with estimates derived from our experiments. For the intercept we obtain ... and for the slope we obtain ....
+We can compare these variances with estimates derived from our experiments.
 
-We observe that the estimates are close to the theoretical values computed earlier. 
+```{r, Estvar}
+print(var(betahat[,1]))
+print(var(betahat[,2]))
+```
+
+For the the intercept we obtain `r round(var(betahat[,1]), 3)` and for the slope we obtain `r round(var(betahat[,2]), 3)`. We observe that the estimates are close to the theoretical values computed earlier.
+
+## Question 13
+
+If we repeat the experiments based on 1000 realisations of the response vector, we observe in Figure 7 that the histograms and kernel density estimates start resembling those of a Normal distribution whose mean coincides with the true parameter values. In fact, given that the response vector is sampled from a normal linear model, we know that the least squares estimator of the parameter vector is unbiased and has a multivariate normal distribution.
+
+```{r, 1000RepeatedRuns, fig.cap="Histograms of estimates for 1000 repetitions of the experiment.", out.width="49%", fig.show='hold'}
+# Function to produce histograms
+sampling.hist <- function(c, Nruns){
+  m1 <- max(density(betahat[,1])$y)
+  hist(betahat[,1], xlab="Estimated intercept",
+       main=paste("Histogram based on \n", Nruns,  "samples"),
+       prob=T, ylim=c(0, m1))
+  abline(v=1, col="darkred", lwd=3); lines(density(c[,1]),lwd=2, col="blue")
+  legend("topleft", legend=c("density estimate", "true intercept"),
+         lty=1, col=c("blue","darkred"))
+  m2 <- max(density(betahat[,2])$y)
+  hist(betahat[,2], xlab="Estimated slope",
+       main=paste("Histogram based on\n", Nruns,  "samples"),
+       prob=T, ylim=c(0,m2))
+  abline(v=2, col="darkred", lwd=3)
+  lines(density(betahat[,2]),lwd=2, col="blue")
+  legend("topright", legend=c("density estimate", "true slope"),
+         lty=1, col=c("blue","darkred"))
+}
+# Sampling response vector and fitting linear models
+betahat <- sampling.dist(Nruns=1000)
+# Histograms of estimates
+sampling.hist(betahat, Nruns=1000)
+# Print variance
+print(var(betahat[,1]))
+print(var(betahat[,2]))
+```
