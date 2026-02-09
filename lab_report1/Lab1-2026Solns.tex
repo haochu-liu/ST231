@@ -1,0 +1,216 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  12 pt,
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={ST231 Lab Report 1},
+  colorlinks=true,
+  linkcolor={Maroon},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={blue},
+  pdfcreator={LaTeX via pandoc}}
+
+\title{ST231 Lab Report 1}
+\author{}
+\date{\vspace{-2.5em}Deadline: 3 February 2026, 1 pm}
+
+\begin{document}
+\maketitle
+
+\section{Data Description}\label{data-description}
+
+The data in the file \texttt{dia1.csv} is an adapted subset from the
+\texttt{diamond}s dataset in the \texttt{ggplot2} package. It consists
+of information on 800 round diamonds. The variables considered for this
+lab report are:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{price}: the sale price of the diamond in US Dollars.
+\item
+  \texttt{weight}: the weight of the diamond in carat.
+\end{itemize}
+
+\section{Instructions}\label{instructions}
+
+\textbf{Carefully read the
+\href{https://moodle.warwick.ac.uk/mod/page/view.php?id=2767925}{Lab
+Report Guidance} on moodle before you start working on this lab report!}
+
+In the following you will explore the relationship between the weight of
+a diamond and its price.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{{[}2 marks{]}} Produce a scatterplot that illustrates the
+  relationship between the weight of a diamond and its price. Fit a
+  quadratic and a cubic regression model to the data with \texttt{price}
+  as the response variable and \texttt{weight} as the explanatory
+  variable. Add the fitted curves of the two polynomial models to the
+  scatterplot.
+\item
+  \textbf{{[}3 marks{]}} Based on the evidence from the plot in Question
+  1, critically evaluate and compare the fit of the two models to the
+  data.
+\item
+  \textbf{{[}3 marks{]}} For each of the two fitted models, produce a
+  residual plot, that is a plot of residuals against fitted values.
+  Critically evaluate and compare the two plots.
+\end{enumerate}
+
+\textbf{{[}2 marks{]}} for style and quality of presentation.
+
+\newpage
+
+\textbf{Feedback:}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  R markdown syntax and cheat sheet.
+\item
+  Hide code blocks, \texttt{echo=FALSE}.
+\item
+  \texttt{fig.cap}
+\item
+  Question 2 and 3
+\end{enumerate}
+
+\textbf{Solutions:}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  The scatterplot below shows the data and the fitted curves for the
+  quadratic regression model (blue solid line) and the cubic regression
+  model (dashed red line) which both predict the price of a diamond from
+  its weight.
+\end{enumerate}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth,alt={A scatterplot of diamond prices in Dollars against the weight of the diamond in carat. The fitted curves for a quadratic regression model and a cubic regression model have been added to the plot.  For further comments on the plot, see the main text.}]{Lab1-2026Solns_files/figure-latex/Question2-1} 
+
+}
+
+\caption{A scatterplot of diamond prices in Dollars against the weight of the diamond in carat. The fitted curves for a quadratic regression model and a cubic regression model have been added to the plot.}\label{fig:Question2}
+\end{figure}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
+\item
+  Both models take account of the fact that the relationship between the
+  weight of diamonds and their price is curved rather than linear.
+  However the quadratic model systematically underestimates prices for
+  diamonds that have a small weight, even predicting negative prices. In
+  contrast the cubic model appears to fit the data more closely. In
+  particular, it avoids predicting negative prices for lighter diamonds.
+  However, it shows some artifacts that come from the properties of a
+  cubic function. The fitted cubic curve attains a maximum at around
+  2.25 carat and then decreases which does not fit with the general
+  observation that diamonds tend to be more expensive the heavier they
+  are. (We observe a similar artifact weights close to zero where the
+  curve attains a minimum.)
+
+  \textbf{Note:} In this specific example the artifacts of the cubic
+  model occur at the boundary of the range of the data where there are
+  few observations to infer the shape of the relationship between weight
+  and price. Here we would always be cautious.
+\end{enumerate}
+
+\newpage
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{3}
+\item
+  The residual plot for the quadratic regression model indicates some
+  mild non-linearity as the smoother first decreases and then increases.
+  The non-linearity is less pronounced in the residual plot for the
+  cubic regression model as the smoother is initially flat and only
+  increases for larger fitted values. In both plots, the observations
+  form a right-opening megaphone pattern, which indicates
+  hetero-scedasticity with a variance that is increasing with fitted
+  value.
+
+  \textbf{Note:} When we fit polynomial models, we always include any
+  lower order terms. For example, in the cubic modoel we included a
+  cubic term \texttt{I(weight\^{}3)}, but also a quadratic term
+  \texttt{I(weight\^{}2)} and a linear term \texttt{weight}.
+\end{enumerate}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.48\linewidth,alt={Residual versus fitted values plots. Left: residual plot for the quadratic regression model. Right:  residual plot for the cubic regression model. For further comments on the plot, see the main text.}]{Lab1-2026Solns_files/figure-latex/Question3-1} \includegraphics[width=0.48\linewidth,alt={Residual versus fitted values plots. Left: residual plot for the quadratic regression model. Right:  residual plot for the cubic regression model. For further comments on the plot, see the main text.}]{Lab1-2026Solns_files/figure-latex/Question3-2} 
+
+}
+
+\caption{Residual versus fitted values plots. Left: residual plot for the quadratic regression model. Right:  residual plot for the cubic regression model.}\label{fig:Question3}
+\end{figure}
+
+\end{document}
