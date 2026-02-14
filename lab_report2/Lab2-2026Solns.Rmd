@@ -1,0 +1,128 @@
+---
+title: "ST231 Lab Report 2"
+date: 'Deadline: 10 February 2026, 1 pm'
+output:
+  pdf_document: 
+    keep_tex: true
+  html_document: default
+fontsize: 12 pt
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width="60%", fig.align="center", comment="", message= FALSE)
+```
+
+# Data Description
+
+The data in the file `dia2.csv` is an adapted subset from the `diamonds` dataset in the `ggplot2` package. It consists of information on 800 round diamonds. The variables considered for this lab report are:
+
+-   `price`: the sale price of the diamond in US Dollars.
+-   `weight`: the weight of the diamond in carat.
+
+
+# Instructions
+
+**Carefully read the [Lab Report Guidance](https://moodle.warwick.ac.uk/mod/page/view.php?id=2767925) on moodle before you start working on this lab report!**
+
+In the following we will consider log(price) as the response variable.
+
+1.  **[2 marks]** Produce a scatterplot of log(price) against weight. Describe the empirical relationship between log(price) and weight and explain why the assumption of a linear relationship between weight and log-price is not reasonable.
+
+2. **[2 marks]** According to Tukey-Mosteller's bulging rule, how might we transform the explanatory variable `weight` to produce a more linear relationship to log(price). Clearly justify your answer. 
+
+3. **[4 marks]** Consider the following three models:
+
+    - Model 1: `log(price) ~ sqrt(weight)`
+    - Model 2: `log(price) ~ log(weight)`
+    - Model 3: `log(price) ~ 1/weight`
+  
+    For each model perform the following steps:
+    
+    a. Fit the model to the data.
+    b. Add the fitted curve to a scatterplot of log(price) against weight. 
+    
+    Critically evaluate the three plots and, using the evidence from the plots, explain which of the three model is the most appropriate. 
+ 
+**[2 marks for style and presentation]**
+
+\newpage
+
+**Solutions:**
+
+1.  Figure 1 below shows a scatterplot of log-price against weight. We observe that the relationship is increasing but concave down, that is the same increase in weight tends to be associated with a smaller increase in log-price for diamonds that are heavier than for those that are lighter. **[1 mark]**
+
+    It is therefore not reasonable to assume a linear relationship as this would imply a constant rate of increase.  **[1 mark]** 
+
+```{r Question1, echo=FALSE, fig.cap="A scatterplot of the log-price against weight for the diamond data. ", fig.alt="A scatterplot of log-price against weight. The plot shows an increasing relationship that is concave down.   For further comments on the plot, see the main text."}
+dia2 <- read.csv("dia2.csv")
+plot(log(price) ~ weight, pch=16, cex=0.5, data=dia2,
+     xlab="weight (in carat)", ylab="log-price (in log-S$)")
+```
+
+2. As the relationship is increasing with a diminishing rate of increase, the relationship between  weight and log(price) most resembles the curve in the upper-left quadrant  of the Tukey-Mosteller bulging rule. **[1 mark]** Therefore the suggested transformation, according to the bulging rule, is to transform the explanatory variable weight down the power ladder. **[1 mark]**
+
+
+3. In Figure 2, for each of the three suggested models, we have added the fitted curve to a scatterplot of log(price) against weight. All three fitted curves are increasing with a diminishing rate of increase and thus take account of the nature of the empirical relationship seen in the data. **[1 mark]**
+
+   The plot in the top-left illustrates the fit for Model 1: `log(price) ~ sqrt(weight)`. Note that the model systematically over-predicts prices for diamonds of small and of large weight. **[1 mark]**
+
+   Next, the plot in the top-right illustrates the fit for  Model 3: `log(price) ~ 1/weight`. This model systematically under-predicts the prices for diamonds that are heavier. **[1 mark]**
+
+   The plot in the bottom row illustrates the fit for Model 2: `log(price) ~ log(weight)`. In contrast to the other two models, shows less signs of systematic over- or under-predictions. It is thus the most appropriate model. **[1 mark]**
+
+
+
+```{r Question3, echo=FALSE, fig.cap="Illustration of the fitted simple linear regression models predicting log(price). Top-left: Model 1 uses sqrt(weight) as explanatory variable. Top-right: Model 3 uses the reciprocal of weight as predictor variable . Bottom row: Model 2 is a simple linear regression model of log-price on log-weight. [1 mark]" , fig.alt="Illustration of the fitted simple linear regression models predicting log(price). Top row, left: Model 1 uses sqrt(weight) as explanatory variable. Top row, right: Model 3 uses the reciprocal of weight as predictor variable . Bottom row: Model 2 is a simple linear regression model of log-price on log-weight. Model 2 shows the best fit. For further comments on the plots, see the main text.", out.width="48%", fig.show='hold'}
+model1 <- lm(log(price) ~ sqrt(weight), data=dia2)
+model2 <- lm(log(price) ~ log(weight), data=dia2)
+model3 <- lm(log(price) ~ I(1/weight), data=dia2)
+x <- seq(from=min(dia2$weight), to=max(dia2$weight), length=101)
+mlist <- list(model1, model3, model2)
+for (i in seq_along(mlist)) {
+  p <- predict(mlist[[i]], newdata=list(weight=x))
+  plot(log(price) ~ weight, pch=16, cex=0.4, 
+     xlab="weight (in carat)", ylab="log-price (in log-$S)", data=dia2)
+  lines(x, p, col=6-i, lwd=2)
+  legend("bottomright", legend = paste("Model", c(1,3,2)[i]), col=6-i, lty=1, lwd=2)
+}
+```
+
+
+
+
+\newpage
+
+# Marking instructions
+
+You may give half marks for minor mistakes but this should be done sparingly.
+
+**Marking instructions for Q1 [2 marks]**
+
+- 1 mark for explaining that relationship is increasing and concave down and thus has a diminishing rate of increase (no need to specifically state "concave down", diminishing rate of increase or something equivalent is fine.)
+- 1 mark for noting that this violates linearity as the latter implies a constant rate of increase (or by adding a line of best fit and identifying systematic over-/under-prediction.)
+
+
+**Marking instructions for Q2 [2 marks]**
+
+- 1 mark for identifying the correct quadrant (note my post about mislabelling quadrant 2 as quadrant 4 in the lectures - don't penalise the students for that.)
+- 1 mark for stating the correct type of transformation. 
+
+
+**Marking instructions for Q3 [4 marks]**
+
+
+- 1 mark for noting that all three models produce an increasing curve with diminishing rate of increase (ok if just stating that they are non-linear.)
+- 1 mark for noting issues with Model 1.
+- 1 mark for noting issues with Model 3.
+- 1 mark for identifying Model 2 as being most appropriate as has best fit. 
+
+**Style and Presentation: [2 marks]**
+
+ - 2 marks for correct and clearly labelled plots and clear explanations
+ - 1 mark if minor deficiencies
+ - 0 marks if major issues
+ 
+For presentation of plots consider: labelled axis, appropriate size, appropriate use of colour, clear **numbered** caption, legend where needed. 
+For general presentation consider rounding of numerical results, clear definition of models, general formatting, results presented in full sentences or neat tables, no irrelevant content (eg no code that has not been asked for, messages of packages being loaded that have not been suppressed and similar).
+ 
