@@ -18,70 +18,121 @@ pdf_doc <- knitr::is_latex_output()
 if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%")} else {opts_chunk$set(echo=TRUE)}
 ```
 
+# Regression outliers, leverage and influence
 
+## Question 1
 
-# Regression outliers, leverage and influence  {-}
-
-<!--- Part 1 --->
 ```{r, LoadPackages, message=FALSE}
 library(carData)
 data(Duncan)
 ```
 
-<!--- Part 2 and 3: Brief description of the dataset --->
+## Question 2 and 3
 
+The Duncan dataset contains four columns: `type`, `income`, `education` and `prestige`. `?Duncan` provides detailed information about the dataset.
 
-<!--- Part 4: Scatterplot matrix --->
+```{r, Summary, eval=F}
+summary(Duncan)
+```
 
+The data set has three numerical variables: `income`, `education` and `prestige`. All three of these variables are percentages and so take values from 0 to 100. There is an additional categorical variable `type` showing that while professional and blue-collar occupations are roughly equally represented (21 and 18 occupations), white-collar occupations make up a much smaller proportion (6 out of 45) of the occupations considered.
 
-<!--- Part 5: Regression of prestige on income and education --->
+## Question 4
 
+Figure 1 shows the pairwise scatterplots for the variables `income`, `education` and `prestige`. We observe that the pairwise relationships between the variables appear roughly linear.
+
+```{r, 1b, echo = FALSE, out.width="65%", fig.align='center', fig.cap="Scatterplots for the numerical variables in the Duncan dataset.", fig.alt="A pairs plot of the numerical variables in the Duncan dataset. The pairwise relationships between the variables appear roughly linear."}
+# Scatterplot matrix 
+pairs(Duncan[2:4], pch=16)
+```
+
+## Question 5
+
+To examine how prestige is associated with both income and education we fit a multiple regression model of prestige on income and education. Figure 2 shows the residual plot of the fitted model.
+
+We see some mild violation of constant variance. But the linearity assumption is reasonable.
 
 ```{r, out.width="60%", fig.align='center', fig.cap="Residual plot of the regression of prestige on income and education."}
 dc.model <- lm(prestige ~ income + education, data = Duncan)
 plot(dc.model, 1)
 ```
-<!--- Comment on the residual plot --->
 
+## Question 6 and 7
 
-<!--- Part 6 and 7: Examining leverages --->
-<!--- Annotate and then implement code chunk --->
+The function `hatvalues(dc.model)` computes the leverages for the data used in `dc.model`.
 
 ```{r}
-# 
-# 
+# Order observations according to leverages and 
+# plot row names of the three observations with the highest leverages
 ind <- order(hatvalues(dc.model), decreasing=TRUE)[1:3]
 row.names(Duncan[ind,])
 ```
 
+To identify why these observations have high leverages we produce a scatterplot of income against education.
 
-To identify why these observations have high leverages we produce a scatterplot of income against education. 
 ```{r, IncomeEdu, out.width="60%", fig.align='center', fig.cap="Scatterplot of income versus education."}
+# Provide the scatterplot.
 plot(income ~ education, data=Duncan)
-# Label 3 observations with highest leverages
+# Highlight the points with high leverages.
+points(income ~ education, col="brown", data=Duncan[ind,], pch=16)
+# Add text to the highlighted points.
+text(Duncan$education[ind], Duncan$income[ind], labels=row.names(Duncan)[ind], pos=4)
+```
 
-```  
-
-<!--- Part 8: Regression outliers --->
+## Question 8
 
 Next we identify the observations that are regression outliers, that is those observations with an absolute standardised residual greater than two.
 
+```{r, eval=F}
+sres <- rstandard(dc.model)
+which(abs(sres)>2)
+```
 
-<!--- Influence: Cook's distance --->
+## Question 9 and 10
 
+```{r}
+n <- nrow(Duncan)           # Number of observations
+p <- length(coef(dc.model)) # Number of coefficients
+round(qf(0.5, p, n-p), 2)
+```
 
-We produce an index plot  of the Cook's distances for our fitted model.
+Here the rule of thumb threshold for the Cook’s distance is around 0.8.
+
+```{r, eval=F}
+cook.dist <- cooks.distance(dc.model)
+round(sort(cook.dist, decreasing=TRUE)[1], 2)
+```
+
+Thus all Cook’s distances are below the rule of thumb threshold. However, this is a conservative threshold and it is recommended to follow up any datapoints that have large Cook’s distance compared to the other observations in the dataset, not just those above a threshold. Next, we produce an index plot of the Cook's distances for our fitted model.
+
 ```{r, IndexCooks, out.width="60%", fig.align='center', fig.cap="Index plot of the Cook's distances."}
 plot(dc.model, 4)
 ```
 
+We observe that the Cook's distances for **minister, conductor and reporter** are substantially larger than those for the other observations.
+
+## Question 11
+
 We investigate these observations further in a residuals versus leverages plot.
+
 ```{r, ResLev,  out.width="60%", fig.align='center', fig.cap="Plot of studentised residuals against leverages."}
 plot(dc.model, which=5, id.n=4)
 ```
 
+-   RR.engineer and conductor: high leverage and low std residuals, Cook's distance $< 0.5$.
+-   Reporter: high std residual and low leverage, Cook's distance $< 0.5$.
+-   Minister: high std residual and also high leverage, Cook's distance $> 0.5$.
 
-<!--- Influence: removing influential observations --->
+## Question 12
 
-Next we consider the effect that removing the observation minister has on the estimated coefficients. 
+Next we consider the effect that removing the observation minister has on the estimated coefficients.
 
+```{r, 1a, echo=F, eval=T, message=F}
+ind <- which(rownames(Duncan)=="minister")
+dc.model.new <- update(dc.model, subset=-ind) # refit the model with minister removed
+dta <- cbind(round(coef(dc.model.new),2), round(coef(dc.model),2))
+
+kable(dta,col.names=c("Estimated coefficient",  "Dataset without minister", "Complete dataset"), full_width=F) 
+```
+
+We observe that including minister in the dataset reduces the coefficient for income and increases the coefficient for education. To give context to this results let's consider the characteristics for the occupation minister. Minister in this dataset has a high value for prestige, `r Duncan[ind, 4]`% of survey participants rated the prestige of the occupation as good or better. Moreover, a high percentage of ministers in the 1950 census, namely `r Duncan[ind, 3]`%, were high school graduates but relatively few, just `r Duncan[ind, 2]`%, were on a salary above \$3,500. Thus, compared to a model that excludes the observation minister, in the model fitted to the complete dataset, the partial effect of income on prestige is reduced while the partial effect for education is increased.

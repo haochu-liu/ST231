@@ -86,7 +86,7 @@ points(income ~ education, col="brown", data=Duncan[ind,], pch=16)
 text(Duncan$education[ind], Duncan$income[ind], labels=row.names(Duncan)[ind], pos=4)
 ```  
 
-We observe that the three observations with the highest leverages are unusual observations in the predictor space. Railroad engineers and conductors have unusually high income levels given their level of education, while ministers have a low income level given their level of education. Here minister seems to refer to a member of clergy and, because of the particular role of clergy, it is reasonable that the income percentage is low compared to the education percentage. Furthermore, the data is from 1950, a time of railroad expansion, which explains the high level of income  for the railroad engineers and conductors.
+We observe that the three observations with the highest leverages are unusual observations in the predictor space. Railroad engineers and conductors have unusually high income levels given their level of education, while ministers have a low income level given their level of education. Here minister seems to refer to a member of clergy and, because of the particular role of clergy, it is reasonable that the income percentage is low compared to the education percentage. Furthermore, the data is from 1950, a time of railroad expansion, which explains the high level of income for the railroad engineers and conductors.
 
 <!--- Part 8: Regression outliers --->
 
@@ -141,7 +141,4 @@ kable(dta,col.names=c("Estimated coefficient",  "Dataset without minister", "Com
 ```
 
 
-We observe that including minister in the dataset reduces the coefficient for income and increases the coefficient for education. To give context to this results let's consider the characteristics for the occupation minister. 
-Minister in this dataset has a high value for prestige, `r Duncan[ind, 4]`\% of survey participants rated the prestige of the occupation as good or better. Moreover, a high percentage of ministers  in the 1950 census, namely `r Duncan[ind, 3]`\%,  were high school graduates but relatively few, just `r Duncan[ind, 2]`\%,  were on a salary above \$3,500. Thus, compared to a model that excludes the observation minister, in the model fitted to the complete dataset, the partial effect of income on prestige is reduced while the partial effect for education is increased. 
-
-
+We observe that including minister in the dataset reduces the coefficient for income and increases the coefficient for education. To give context to this results let's consider the characteristics for the occupation minister. Minister in this dataset has a high value for prestige, `r Duncan[ind, 4]`\% of survey participants rated the prestige of the occupation as good or better. Moreover, a high percentage of ministers  in the 1950 census, namely `r Duncan[ind, 3]`\%,  were high school graduates but relatively few, just `r Duncan[ind, 2]`\%,  were on a salary above \$3,500. Thus, compared to a model that excludes the observation minister, in the model fitted to the complete dataset, the partial effect of income on prestige is reduced while the partial effect for education is increased. 
