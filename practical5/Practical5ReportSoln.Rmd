@@ -1,0 +1,147 @@
+---
+title: "Practical Report 5"
+output:
+  html_document:
+    df_print: paged
+    code_folding: hide
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    highlight: monochrome
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%", comment="")} else {opts_chunk$set(comment="")}
+```
+
+
+
+# Regression outliers, leverage and influence  {-}
+
+<!--- Part 1 --->
+```{r, LoadPackages, message=FALSE}
+library(carData)
+data(Duncan)
+```
+
+<!--- Part 2 and 3: Brief description of the dataset --->
+
+The `Duncan` dataset contains data on 45 occupations taken from a social survey and the 1950 US survey. For each occupation the following characteristics were recorded:
+
+ - `type`: the type of occupation (professional/managerial, white-collar, blue-collar);
+ - `income`: percentage of census participants in this occupation who earned \$3,5000 or above;
+ - `education`: percentage of census participants in this occupation who were high school graduates;
+ - `prestige`: percentage of survey respondents rating the prestige of the occupation as good or better.
+ 
+
+```{r, Summary, eval=F}
+summary(Duncan)
+```
+The data set has three numerical variables: `income`, `education` and `prestige`. All three of these variables are percentages and so take values from 0 to 100.
+There is an additional categorical variable `type` showing that while professional and blue-collar occupations are roughly equally represented (21 and 18 occupations), white-collar occupations make up a much smaller proportion (6 out of 45) of the occupations  considered.
+
+<!--- Part 4: Scatterplot matrix --->
+
+Figure 1 shows the pairwise scatterplots for the variables `income`, `education` and `prestige`. We observe that the pairwise relationships between the variables appear roughly linear. 
+```{r, 1b, echo = FALSE, out.width="65%", fig.align='center', fig.cap="Scatterplots for the numerical variables in the Duncan dataset.", fig.alt="A pairs plot of the numerical variables in the Duncan dataset. The pairwise relationships between the variables appear roughly linear."}
+# Scatterplot matrix 
+pairs(Duncan[2:4], pch=16)
+```  
+
+
+<!--- Part 5: Regression of prestige on income and education --->
+<!--- Comment on the residual plot --->
+
+To examine how prestige is associated with both income and education we fit a multiple regression model of prestige on income and education. Figure 2 shows the residual plot of the fitted model.
+
+```{r, out.width="60%", fig.align='center', fig.cap="Residual plot of the regression of prestige on income and education.", fig.alt="Residual plot for the fitted model. The  plot points to some very mild heteroscedasticity, but otherwise there are no serious violations of the model assumptions.", eval=T}
+dc.model <- lm(prestige ~ income + education, data = Duncan)
+plot(dc.model, 1)
+```
+
+The plot shows possibly some mild evidence of heteroscedasticity with the variation being smaller for small and for large fitted values. However, given the small number of observations, the constant variance assumption is not unreasonable. The smoothing curve is relatively horizontal and so raises no concerns. Thus, the linearity assumption is reasonable.
+
+<!--- Part 6 and 7: Examining leverages --->
+
+<!--- Annotate and then implement code chunk --->
+
+```{r, 1e, eval=FALSE}
+# Order observations according to leverages and 
+# plot row names of the three observations with the highest leverages
+ind <- order(hatvalues(dc.model), decreasing=TRUE)[1:3]
+row.names(Duncan[ind,])
+```
+
+Next we consider the leverages of the datapoints. The occupations with the three highest leverages are railroad engineers, conductors and ministers. 
+
+To identify why these observations have high leverages we produce a scatterplot of income against education. 
+
+```{r, 1f, out.width="60%", fig.align='center', fig.cap="Scatterplot of income versus education. The three observations with the highest leverlages are shown as filled red points.", fig.alt="A scatterplot of income versus education which shows a roughly linear relationship. The three observations with the highest leverages are RR.engineer, conductor and minister. They lie apart from the bulk of the data points."}
+ind <- order(hatvalues(dc.model), decreasing=TRUE)[1:3]
+plot(income ~ education, data=Duncan)
+points(income ~ education, col="brown", data=Duncan[ind,], pch=16)
+text(Duncan$education[ind], Duncan$income[ind], labels=row.names(Duncan)[ind], pos=4)
+```  
+
+We observe that the three observations with the highest leverages are unusual observations in the predictor space. Railroad engineers and conductors have unusually high income levels given their level of education, while ministers have a low income level given their level of education. Here minister seems to refer to a member of clergy and, because of the particular role of clergy, it is reasonable that the income percentage is low compared to the education percentage. Furthermore, the data is from 1950, a time of railroad expansion, which explains the high level of income  for the railroad engineers and conductors.
+
+<!--- Part 8: Regression outliers --->
+
+Next we identify the observations that are regression outliers, that is those observations with an absolute standardised residual greater than two. Using a modulus of 2 as a threshold identifies two observations: reporter and minister. 
+
+
+```{r, eval=F}
+sres <- rstandard(dc.model)
+which(abs(sres)>2)
+```
+
+
+<!--- Influence: Cook's distance --->
+
+```{r}
+n <- nrow(Duncan)
+p <- length(coef(dc.model))
+```
+
+The Cook's distance is a measure of influence and, for the dataset given here, the rule of thumb threshold identifies observations as influential if they have a Cook's distance greater than `r round(qf(0.5, p, n-p), 2)`.
+
+```{r, eval=F}
+cook.dist <- cooks.distance(dc.model)
+round(sort(cook.dist, decreasing=TRUE)[1], 2)
+```
+The largest Cook's distance  obtained is for minister with a value of 0.57. Thus all Cook's distances are below the rule of thumb threshold. However, this is a conservative threshold and it is recommended to follow up any datapoints that have large Cook's distance compared to the other observations in the dataset, not just those above a threshold.  Hence we produce an index plot (Figure 4) of the Cook's distances for our fitted model.
+
+```{r, 1h, out.width="60%", fig.align='center', fig.cap="Index plot of the Cook's distances.", fig.alt="Index plot of the Cook's distances. Minister, conductor and reporter have the three highest Cooks distances."}
+plot(dc.model, 4)
+```
+Three observations are flagged up: minister, conductor and reporter. We observe that their Cook's distances are substantially larger than those for the other observations.
+
+We investigate these observations further in a residuals versus leverages plot, see Figure 5. 
+
+```{r, 1i, out.width="60%", fig.align='center', fig.cap="Plot of studentised residuals against leverages.", fig.alt="Plot of standardised residuals against leverages with contour lines for the Cook's distance. Conclusions that can be drawn from the plot are discussed in the main text."}
+plot(dc.model, which=5, id.n=4)
+```
+
+Minister has the largest Cook's distance and is the only observation with a Cook's distance greater than 0.5. It is the observation with the largest standardised residual (close to 3) and one of the highest leverages. Railroad engineer has the highest leverage, but a small absolute standardised residual and thus does not make it into the top three observations with the largest Cook's distance.  Conductor has a  slightly larger leverage than minister but has a smaller Cook's distance due to the absolute value of its standardised residual being smaller. Finally, reporter is not high leverage but because the absolute value of its standardised residual is relatively large, it makes it into the top three observations with the largest Cook's distance. 
+
+<!--- Influence: removing influential observations --->
+
+Next we consider the effect that removing the observation minister has on the estimated coefficients. Suppose the model is defined as 
+The table below presents the estimated coefficients when using the complete data and after removing the observation minister. 
+
+```{r, 1a, echo=F, eval=T, message=F}
+ind <- which(rownames(Duncan)=="minister")
+dc.model.new <- update(dc.model, subset=-ind)
+dta <- cbind(round(coef(dc.model.new),2), round(coef(dc.model),2))
+
+kable(dta,col.names=c("Estimated coefficient",  "Dataset without minister", "Complete dataset"), full_width=F) 
+```
+
+
+We observe that including minister in the dataset reduces the coefficient for income and increases the coefficient for education. To give context to this results let's consider the characteristics for the occupation minister. 
+Minister in this dataset has a high value for prestige, `r Duncan[ind, 4]`\% of survey participants rated the prestige of the occupation as good or better. Moreover, a high percentage of ministers  in the 1950 census, namely `r Duncan[ind, 3]`\%,  were high school graduates but relatively few, just `r Duncan[ind, 2]`\%,  were on a salary above \$3,500. Thus, compared to a model that excludes the observation minister, in the model fitted to the complete dataset, the partial effect of income on prestige is reduced while the partial effect for education is increased. 
+
+
