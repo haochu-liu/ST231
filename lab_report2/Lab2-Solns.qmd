@@ -1,0 +1,69 @@
+---
+title: "Lab 2 solution"
+author: "Haochu"
+format:
+  revealjs:
+    code-fold: false
+    scrollable: true
+---
+
+## Question 1
+
+```{r Question1}
+dia2 <- read.csv("../data/dia2.csv")
+plot(log(price) ~ weight, pch=16, cex=0.5, data=dia2,
+     xlab="weight (in carat)", ylab="log-price (in log-S$)")
+```
+
+## Question 1
+
+We have a scatterplot of log-price against weight. We observe that the relationship is increasing but concave down, that is the same increase in weight tends to be associated with a smaller increase in log-price for diamonds that are heavier than for those that are lighter. **\[1 mark\]**
+
+It is therefore not reasonable to assume a linear relationship as this would imply a constant rate of increase. **\[1 mark\]**
+
+**Remarks:** set log(price) as the response variable.
+
+## Question 2
+
+We see a concave down curve and an increasing trend from the scatterplot. This corresponds to the upper-left quadrant of the Tukey-Mosteller bulging rule. **\[1 mark\]** Therefore the suggested transformation, according to the bulging rule, is to transform the explanatory variable weight down the power ladder. **\[1 mark\]**
+
+**Remarks:** we need both concave down and increasing relationship to identify the exact quadrant.
+
+## Question 3
+
+```{r Question3}
+#| layout-ncol: 3
+#| fig-width: 4
+#| fig-height: 4
+model1 <- lm(log(price) ~ sqrt(weight), data=dia2)
+model2 <- lm(log(price) ~ log(weight), data=dia2)
+model3 <- lm(log(price) ~ I(1/weight), data=dia2)
+x <- seq(from=min(dia2$weight), to=max(dia2$weight), length=101)
+mlist <- list(model1, model3, model2)
+for (i in seq_along(mlist)) {
+  p <- predict(mlist[[i]], newdata=list(weight=x))
+  plot(log(price) ~ weight, pch=16, cex=0.4, 
+     xlab="weight (in carat)", ylab="log-price (in log-$S)", data=dia2)
+  lines(x, p, col=6-i, lwd=2)
+  legend("bottomright", legend = paste("Model", c(1,3,2)[i]), col=6-i, lty=1, lwd=2)
+}
+```
+
+## Question 3
+
+All three fitted curves are increasing with a diminishing rate of increase and thus take account of the nature of the empirical relationship seen in the data. **\[1 mark\]**
+
+**Remarks:**
+
+1.  Keep the x-axis as weight for comparison.
+2.  `model3 <- lm(log(price) ~ I(1/weight), data=dia2)`.
+
+## Transformations in linear regression model
+
+In R, the `I()` function stands for "As Is" We need `I()` anytime you use `+`, `-`, `*`, `/`, or `^` for mathematical transformation directly inside the `lm()` function. This tells R: "Treat this strictly as a mathematical calculation, not as formula syntax."
+
+For example:
+
+-   `lm(y ~ x1 + x2)` represents $y = \beta_0 + \beta_1 x_1 + \beta_2 x_2$.
+
+-   `lm(y ~ I(x1 + x2))` represents $y = \beta_0 + \beta_1 (x_1 + x_2)$.
