@@ -134,5 +134,3 @@ dta <- cbind(round(coef(dc.model.new),2), round(coef(dc.model),2))
 
 kable(dta,col.names=c("Estimated coefficient",  "Dataset without minister", "Complete dataset"), full_width=F) 
 ```
-
-We observe that including minister in the dataset reduces the coefficient for income and increases the coefficient for education. To give context to this results let's consider the characteristics for the occupation minister. Minister in this dataset has a high value for prestige, 87% of survey participants rated the prestige of the occupation as good or better. Moreover, a high percentage of ministers in the 1950 census, namely 84%, were high school graduates but relatively few, just 21%, were on a salary above \$3,500. Thus, compared to a model that excludes the observation minister, in the model fitted to the complete dataset, the partial effect of income on prestige is reduced while the partial effect for education is increased.
