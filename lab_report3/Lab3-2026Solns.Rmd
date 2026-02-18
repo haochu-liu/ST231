@@ -1,0 +1,124 @@
+---
+title: "ST231 Lab Report 3"
+date: 'Deadline: 17 February 2026, 1 pm'
+output:
+  pdf_document: 
+    keep_tex: true
+  html_document: default
+fontsize: 12 pt
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width="60%", fig.align="center", comment="", message= FALSE)
+```
+
+# Data Description
+
+The data in the file `dia3.csv` is an adapted subset from the `diamond`s dataset in the `ggplot2` package. It consists of information on 800 round diamonds. The variables considered for this lab report are:
+
+- `price`: the sale price of the diamond in US Dollars.
+- `carat`: the weight of the diamond in carat.
+- `x`: the length of the diamond in mm.
+
+# Instructions
+
+**Carefully read the [Lab Report Guidance](https://moodle.warwick.ac.uk/mod/page/view.php?id=2767925) on moodle before you start working on this lab report!**
+
+
+1.  **[2 marks]** Fit a linear model of log-price on log-weight. Give a quantitative interpretation of the slope coefficient  with respect to the original scale of the response. Your interpretation should be such that it is accessible to a lay person, say a jeweller. 
+
+2.  **[2 marks]** A jeweller used the model to predict the price of a diamond using its weight measured in carat. Afterward, the jeweller discovers that the scale was mis-calibrated and that the true weight of the diamond is 1% higher than originally recorded. Determine the percentage change in predicted price, clearly justifying your computation. 
+
+
+3. **[4 marks]** The jeweller claims that a round diamond's weight can be predicted from its length. (A round diamond is cut into a circular shape when viewed from above.)
+
+    Use the length variable `x` provided in the data set to investigate the claim. Develop a valid linear model that can be used to predict a round diamond's weight from its length. 
+
+   - Critically evaluate a scatterplot of weight against length.
+   - Develop a valid linear model, justifying the model development using both empirical evidence and motivation from the application context. 
+   - Show that the model you developed is valid, meaning that it meets both the linearity and the heteroscedasticity assumption. 
+  
+
+
+**[2 marks]** for style and quality of presentation.
+
+\newpage
+
+**Solutions:**
+
+```{r, echo=FALSE}
+dia3 <- read.csv("dia3.csv")
+model1 <- lm(log(price) ~ log(weight), data=dia3)
+```
+
+1. The slope coefficient of the regression of log-price on log-weight is equal to `r round(coef(model1)[2], 2)`. Note that $1.5^{1.7} \approx 2$. 
+
+
+    Consider two diamonds, A and B where diamond B weighs 50% more than diamond A. Based on the fitted model, we predict that the price of diamond B is approximately twice the price of diamond A. **[2 marks]**
+ 
+2. Suppose $\texttt{weight}_{old}$ is the originally wrongly measured weight and $\texttt{weight}_{new}$ is the corrected weight. Let $\widehat{\texttt{Price}}_{old}$ and $\widehat{\texttt{Price}}_{new}$ be the corresponding predicted price.  As derived in the lectures, we exponentiate the fitted model equation for log-price to obtain a prediction in the original scale of the response. Let $\widehat{\alpha}$ be thee estimated intercept and $\widehat{\beta} = `r round(coef(model1)[2], 2)`$ be the estimated slope from the regression of log-price on log-weight. Then
+$$\widehat{\texttt{Price}}_{new} = \exp(\widehat{\alpha}) \Big(\texttt{weight}_{new}\Big)^{\widehat{\beta}}= \exp(\widehat{\alpha})  \Big(1.01 \times \texttt{weight}_{old}\Big)^{\widehat{\beta}}.$$
+Thus, we have
+$$\widehat{\texttt{Price}}_{new} \quad = \quad  1.01^{1.7} \times \widehat{\texttt{Price}}_{old}.$$
+Hence
+$$\frac{\widehat{\texttt{Price}}_{new} - \widehat{\texttt{Price}}_{old}}{\widehat{\texttt{Price}}_{old}}  \quad = \quad \frac{\widehat{\texttt{Price}}_{new} }{\widehat{\texttt{Price}}_{old}} - 1 \quad = \quad  (1.01^{1.7} - 1) \quad = \quad 1.171\%.$$ **[2 marks]**
+
+   **Firstly, note that the change in the response does not depend on the original weight of the diamond. Secondly, note that the percentage increase is very close to the slope coefficient in the original model. This is why for very small increases in the explanatory variable we may interpret the slope coefficient in a log-log regression as a percentage change in the response variable. However, this is an approximation that only holds for very small increases in the explanatory variable.**
+
+3. Assuming a diamond is of constant density, then its weight is proportional to its volume. Furthermore, we may approximate the volume of a round diamond by its length cubed. **[1 mark]** This suggests as an initial (multiplicative) model  
+   $$\texttt{Weight} \quad \approx \quad \texttt{Length}^3$$ which is linearised by taking logs. Thus a reasonable initial linear model is  $$\log(\texttt{Weight}) \quad = \quad \alpha + \beta \;  \log(\texttt{Length}) + \epsilon.$$ **[1 mark]**
+   
+   The figure below shows a scatterplot of weight against length (left plot) and and a scatterplot of log-weight against log-length (right plot). In the left plot we note an increasing, concave-up relationship together with some mild heteroscedasticity.  The observable non-linearity and heteroscedasticity provides further evidence for the need to transform of the response. **[1 mark]** Our earlier motivation from the application context suggested a log-transform of both weight and length. When we consider the scatterplot after applying these transformations (see right plot), both the non-linearity and heteroscedasticity issue have been resolved. 
+   
+```{r, out.width="48%", fig.show='hold', echo=FALSE, fig.cap=" Left: Scatterplot of weight against length.Right: Scatterplot of log-weight against log-length.", fig.alt="Left: Scatterplot of weight against length which shows a non-linear relationship and heteroscedasticity. Right: Scatterplot of log-weight against log-length which shows a linear relationship and a constant variance. Further comments are given in main text."}
+plot(weight ~ x, pch=16, cex=0.5, data=dia3,
+     xlab="length (in mm)", ylab="weight (in carat)")
+plot(log(weight) ~ log(x), pch=16, cex=0.5, data=dia3,
+     xlab="log-length (in log-mm)", ylab="log-weight (in log-carat)")
+```
+   Below is the residual plot of the linear model using log-weight as response variable and log-length as the predictor variable. We observe a fairly horizontal smoother and observations that tend to lie within a horizontal band around the smoother. Thus the linearity and constant assumptions are reasonable for our fitted model. **[1 mark]**
+   
+```{r, echo=FALSE, fig.cap="Residual plot for the regression of log-weight on log-length.", fig.alt="Residual plot for the regression of log-weight on log-length illustrating that the model meets the  linearity and constant variance assumptions. Further comments are given in main text."  }
+lm.out <- lm(log(weight) ~ log(x), data=dia3)
+plot(lm.out, 1)
+```
+
+  **Note that the estimated slope coefficient is `r round(coef(lm.out)[2], 2)` which is very close to 3 and thus aligns with our expectation that the weight of a diamond is roughly equal to its length cubed.**
+
+\newpage
+
+# Marking instructions 
+
+You may give half marks for minor mistakes but this should be done sparingly.
+
+**Marking instructions for Q1 [2 marks]**
+
+-   1 mark for computing the correct factor, the exact numerical value will depend on the multiplicative weight increase being considered. (No derivation needs to be given.)
+-   1 mark for giving a correct and accessible interpretation.
+
+**Marking instructions for Q2 [2 marks]**
+
+- 1 mark for justifying the computation
+- 1 mark for correct numerical result
+
+**Marking instructions for Q3 [4 marks]**
+
+- 1 mark for relating weight to length cubed. 
+- 1 mark for explaining linearisation.
+- 1 mark for evaluation of scatterplot of weight vs length.
+- 1 mark for evaluation of residual plot. 
+
+Some students may choose the model `weight ~ I(x^3)` or similar. This will not resolve heteroscedasticity! Provided they have motivated the model well and evaluated the residual plot appropriately, give 2 out of 4 marks. 
+
+If students have met the above criteria but their explanations are not well connected as a whole, then you may penalise this via the presentation mark. 
+
+
+**Style and Presentation: [2 marks]**
+
+ - 2 marks for correct and clearly labelled plots and clear explanations
+ - 1 mark if minor deficiencies
+ - 0 marks if  major issues
+ 
+ For presentation of plots consider: labelled axis, appropriate size, appropriate use of colour, clear caption, legends where needed.
+For general presentation consider rounding of numerical results, clear definition of models, general formatting, results presented in full sentences or neat tables, no irrelevant content (eg no code that has not been asked for, messages of packages being loaded that have not been suppressed and similar).
