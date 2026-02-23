@@ -1,5 +1,5 @@
 ---
-title: "Lab 2 solution"
+title: "Lab 3 solution"
 author: "Haochu"
 format:
   revealjs:
