@@ -1,0 +1,86 @@
+---
+title: "Lab 2 solution"
+author: "Haochu"
+format:
+  revealjs:
+    code-fold: false
+    scrollable: true
+    fontsize: 18pt
+---
+
+## Question 1
+
+Fit a linear model of log-price on log-weight. Give a quantitative interpretation of the slope coefficient with respect to the original scale of the response. Your interpretation should be such that it is accessible to a lay person, say a jeweller.
+
+```{r Question1}
+dia3 <- read.csv("../data/dia3.csv")
+model1 <- lm(log(price) ~ log(weight), data=dia3)
+```
+
+$$
+\begin{align*}
+\log(\widehat{\texttt{price}}_i) &= \hat\beta_0 + \hat\beta_1 \log(\texttt{weight}_i)\\
+\widehat{\texttt{price}}_i &= \exp(\hat\beta_0) \times \texttt{weight}_i^{\hat\beta_1}
+\end{align*}
+$$
+
+**Remarks:**
+
+1.  If the weight increases 1%, many of you approximate the increase of price $(1 + 0.01)^{\hat\beta_1}$ by $(1 + 0.01 \times \hat\beta_1)$. This approximate is only correct when the increase is small.
+2.  You can hide the R code and output. Try \` r round(coef(model1)\[2\], 2) \` to present your R output.
+
+## Question 2
+
+A jeweller used the model to predict the price of a diamond using its weight measured in carat. Afterward, the jeweller discovers that the scale was mis-calibrated and that the true weight of the diamond is 1% higher than originally recorded. Determine the percentage change in predicted price, clearly justifying your computation.
+
+If $\texttt{weight}_{new} = 1.01\texttt{weight}_{old}$, $$
+\widehat{\texttt{Price}}_{new} \quad = \quad  1.01^{1.7} \times \widehat{\texttt{Price}}_{old}.
+$$ Hence, the increase of price in percentage is $(1.01^{1.7}-1) \times 100\% = 1.171\%$.
+
+## Question 3
+
+The jeweller claims that a round diamond’s weight can be predicted from its length. (A round diamond is cut into a circular shape when viewed from above.) Use the length variable x provided in the data set to investigate the claim. Develop a valid linear model that can be used to predict a round diamond’s weight from its length.
+
+-   Critically evaluate a scatterplot of weight against length.
+-   Develop a valid linear model, justifying the model development using both empirical evidence and motivation from the application context.
+-   Show that the model you developed is valid, meaning that it meets both the linearity and the heteroscedasticity assumption.
+
+```{r Question3_1}
+#| layout-ncol: 2
+#| fig-width: 5
+#| fig-height: 3
+plot(weight ~ x, pch=16, cex=0.5, data=dia3,
+     xlab="length (in mm)", ylab="weight (in carat)")
+model_linear <- lm(weight ~ x, data=dia3)
+plot(model_linear, 1)
+```
+
+## Question 3
+
+Assuming a diamond is of constant density, then its weight is proportional to its volume. Furthermore, we may approximate the volume of a round diamond by its length cubed. This suggests as an initial (multiplicative) model $$
+\texttt{Weight} \quad \approx \quad \texttt{Length}^3
+$$ which is linearised by taking logs. Thus a reasonable initial linear model is $$
+\log(\texttt{Weight}) \quad = \quad \alpha + \beta \;  \log(\texttt{Length}) + \epsilon.
+$$
+
+```{r Question3_2}
+#| layout-ncol: 2
+#| fig-width: 5
+#| fig-height: 3
+plot(log(weight) ~ log(x), pch=16, cex=0.5, data=dia3,
+     xlab="log-length (in log-mm)", ylab="log-weight (in log-carat)")
+model_log_log <- lm(log(weight) ~ log(x), data=dia3)
+plot(model_log_log, 1)
+```
+
+## Why not `weight ~ I(x^3)`
+
+```{r Question3_3}
+#| layout-ncol: 2
+#| fig-width: 5
+#| fig-height: 3
+plot(weight ~ I(x^3), pch=16, cex=0.5, data=dia3,
+     xlab="length^3 (in mm^3)", ylab="weight (in carat)")
+model_xcubed <- lm(weight ~ I(x^3), data=dia3)
+plot(model_xcubed, 1)
+```

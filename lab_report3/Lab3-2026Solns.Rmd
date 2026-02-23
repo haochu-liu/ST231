@@ -2,9 +2,9 @@
 title: "ST231 Lab Report 3"
 date: 'Deadline: 17 February 2026, 1 pm'
 output:
+  html_document: default
   pdf_document: 
     keep_tex: true
-  html_document: default
 fontsize: 12 pt
 urlcolor: blue
 editor_options: 
