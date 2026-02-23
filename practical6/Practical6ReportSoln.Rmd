@@ -1,0 +1,155 @@
+---
+title: "Practical Report 6"
+output:
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    latex_engine: xelatex
+    highlight: monochrome
+  html_document:
+    df_print: paged
+    code_folding: hide
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%", comment="")} else {opts_chunk$set(comment="")}
+```
+
+
+
+# Categorical Predictors {-}
+
+In this computer practical we are considering the `Diamond` dataset.^[Chu, Singfat (2001) “Pricing the C's of Diamond Stones”, Journal of Statistics Education, 9(2). Data also available in R package Ecdat.]
+
+<!--- Part 1: Loading the data --->
+```{r, echo=FALSE}
+   Diamond <- read.csv("Diamond.csv")
+```
+    
+<!--- Part 2: Variables in the data set --->
+
+The dataset contains information for 308 round diamonds on the following variables:
+
+- `price`: the price of the diamond in Singapore Dollars;
+- `carat`: the weight of the diamond in carat;
+- `colour`: the colour purity of the diamond with levels D, E, F, G, H, I in order of decreasing purity;
+- `clarity`: the clarity of the diamond with levels IF (internally flawless), VVS1, VVS2 (very, very slightly imperfect), VS1 and VS2 (very slightly imperfect);
+- `certification`: body of certification with levels  GIA (Gemmological Institute of America), IGI (International Gemmological Institute) and HRD (Hoge Radd Voor Diamant).
+
+The price of a diamond  and its weight are quantitative variables. The colour purity, the clarity and the certifying institution are all categorical variables. 
+
+<!--- Part 3: Structure of dataframe --->
+Next we consider the dataframe `Diamond` that has been assigned the dataset.
+```{r, str}
+    str(Diamond)
+```
+In the dataframe the variables `price` and `carat` are quantitative and recognized as having a `numeric` and `integer` data type respectively. In contrast, `colour`, `clarity` and `certification` are listed as having `character` as their data type.
+
+<!--- Part 4: Implementing the categorical variables as factors --->
+
+We convert the categorical variables into factors as follows:
+```{r, echo=TRUE}
+    Diamond$clarity <- factor(Diamond$clarity)
+    Diamond$colour <- factor(Diamond$colour)
+    Diamond$certification <- factor(Diamond$certification)
+    str(Diamond)
+```
+The categorical variables are now implemented as factors. 
+
+<!--- Part 5: Summary of the dataset --->
+
+Let's consider some summary statistics for the variables in the data set. 
+For quantitative variables the `summary` command gives a five point summary as well as the mean. For factor variables it provides the counts for each level. 
+```{r}
+    summary(Diamond)
+```
+We observe that the diamond weights range from 0.18 to 1.1 carat with a mean of 0.63 carat. The prices range from S\$638,- to S\$16.008,-. The difference between the median and mean of `price` suggests that the price variable may have a positively skewed distribution. About half of the diamonds were certified by the GIA, about a quarter by the HRD and another quarter by the IGI. The two most common clarity ratings are VS1 and VVS2, internally flawless diamonds are the least common category. The most common colour category is F, while the least common category is D with just 16 observations. 
+
+<!--- Part 6: price versus carat --->
+
+Next we consider the pairwise relationship between the price and the weight of a diamond. 
+The scatterplot in Figure 1 shows a non-linear  relationship. The price of a diamond increases with  weight with the rate of change increasing with weight. We also observe that the prices have a larger variation for larger diamonds. 
+
+```{r, fig.cap="A scatterplot of price against weight for the Diamond data.", fig.alt="A scatterplot of price against weight for the Diamond data. The price of a diamond increases with a weight with an increasing rate of change. Furthermore prices vary more for larger diamonds."}
+     plot(price ~ carat,  data=Diamond,  xlim=c(0, 1.15), col="navy",
+          xlab="weight of diamond (in carat)", 
+          ylab="price of diamond (in Singapore Dollars)")
+```
+
+<!--- Part 7 + 8: log-transforming the quantitiative variables --->
+
+```{r}
+    Diamond$log_price <- log(Diamond$price)
+    Diamond$log_carat <- log(Diamond$carat)
+```
+    
+To address the non-linearity and heteroscedasticity observed in the scatterplot of `price` against `carat`, we log-transform both variables. As can be observed in Figure 2, after the transformation the relationship looks more linear, so it does seem reasonable to model this relationship using a straight line (at least as a starting point for modelling). We also observe that the variance has somewhat stabilised.
+```{r, fig.cap="A scatterplot of log-price against log-weight for the Diamond data.", fig.alt="A scatterplot of log-price against log-weight for the Diamond data. The relationship between the two variables appears reasonably linear and the variance has stabilised."}
+     plot(log_price ~ log_carat, data=Diamond,
+          xlab="log-weight of diamond (in log-carat)", 
+          ylab="log-price of diamond (in log-S$)", 
+          col="navy")
+```
+
+<!--- Part 9 - 11: log-Price vs clarity--->
+
+Next we explore the relationship between the log-transformed price and the factor variable `clarity` using comparative boxplots in Figure 3.
+```{r, fig.cap="Boxplots of log-price grouped by clarity.", fig.alt="Boxplots of log-price grouped by clarity. The middle categories VVS1 and VVS2 appear after the lowest clarity ratings VS1 and VS2 and so don't follow the natural order of clarity. Diamonds of category IF tend to be less expensive.", out.width="70%" }
+    boxplot(log_price ~ clarity, data = Diamond,
+            xlab="diamond clarity rating",
+            ylab="log-price of diamond (in log-S$)")
+```
+The price of a diamond appears to depend on its clarity rating. But note that the ordering of the boxplots is not helpful. The middle categories VVS1 and VVS2 appear after the lowest clarity ratings VS1 and VS2. 
+    
+Using the `factor` command, we can re-order the levels of `clarity` according to increasing clarity rating. This makes it easier to compare the boxplots shown in Figure 4. 
+
+```{r fig.cap="Boxplots of log-price grouped by clarity.", fig.alt="Boxplots of log-price grouped by clarity. The levels of clarity are ordered according to increasing clarity. Diamonds of category IF tend to be less expensive.", out.width="70%" }
+#    levels(Diamond$clarity)
+    Diamond$clarity <- factor(Diamond$clarity, c("VS2", "VS1", "VVS2", "VVS1", "IF"))
+#    levels(Diamond$clarity)
+    boxplot(log_price ~ clarity, data=Diamond,
+            xlab="diamond clarity rating",
+            ylab="log-price of diamond (in log-S$)")
+```
+In Figure 4 we observe a somewhat counter-intuitive result.  The diamonds with the highest clarity rating tend to attract the lowest prices. Let's investigate this further.
+   
+    
+Figure 5 shows boxplots of the log-weight of diamonds grouped by clarity. We observe that the diamonds with the highest clarity rating tend to be smaller, that is have the lowest weight in carat. 
+
+```{r fig.cap="Boxplots of log-weight grouped by clarity.", fig.alt="Boxplots of log-weight grouped by clarity.  Diamonds of category IF tend to be smaller.", out.width="70%"}
+    boxplot(log_carat ~ clarity, data = Diamond,
+          xlab="diamond clarity rating",
+          ylab="log-weight of diamond (in log-carat)")
+```
+As we observed earlier, smaller diamonds tend to cost less, so this may explain why the diamonds with the highest clarity rating tend to attract the lowest price. 
+
+<!--- Part 12 - 14: log_price ~ log_c_carat + clarity --->
+
+This suggests that we need a model that considers clarity ratings adjusted for weight. We can do this by including both the clarity rating and the log-transformed weight in a linear model for the log-transformed price. To aid interpretability we first center the log-transformed weight variable. Below is a print-out of the summary of the fitted model.
+
+```{r}
+    Diamond$log_c_carat <- Diamond$log_carat - log(mean(Diamond$carat))
+    diamond.mlr <- lm(log_price ~ log_c_carat + clarity, data=Diamond)
+    summary(diamond.mlr)
+```
+
+The model uses the default treatment coding for the factor variable clarity. The reference category is the lowest clarity rating, namely VS2 (very slightly imperfect 2). The model fits one regression line for each clarity rating and thus five regression lines in total. These lines may have differing intercept but all have the same slope, thus they are parallel lines.  
+
+We observe that the coefficients for the various clarity ratings that are not the reference category are positive but also increasing with clarity rating. Thus for a given weight of the diamond the model predicts the lowest price for a diamond of the reference category, that is clarity rating VS2.
+Furthermore, adjusted for weight, that is keeping the weight fixed, the predicted price increases with increasing clarity which is what we would expect from the application context. 
+
+The estimated coefficient reported for clarity rating VVS1 is equal to `r round(coef(diamond.mlr)[5],3)`. Suppose we consider two diamonds of average weight (0.63 carat) but one with clarity rating VS2 and the other with clarity rating VVS1.  Back-transforming to the original scale of the response variable `price`, we obtain that, controlling for the weight of the diamond, the fitted model estimates the  price (in S\$) of a diamond with clarity rating VVS1 to be  a factor $\exp(0.217) \approx 1.24$ larger (and thus about 24\% larger) than that of a diamond with clarity rating VS2.
+
+\newpage
+
+<!--- Part 15 - 16: log_price ~ 0 + log_c_carat + clarity --->
+
+If we instead fit the linear model using a stratified coding we obtain as model summary:
+```{r, eval=T}
+    diamond.mlr2 <- lm(log_price ~ 0 + log_c_carat + clarity, data=Diamond)
+    summary(diamond.mlr2)
+```
+The estimated coefficient for clarity rating `VS2` is 8.29 and so a diamond of average weight and with VS2 clarity rating is predicted a  price of about S\$3984,- (computed as $\exp(8.29)$).
