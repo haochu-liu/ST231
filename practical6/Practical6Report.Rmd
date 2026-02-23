@@ -42,19 +42,22 @@ The dataset contains information for 308 round diamonds on the following variabl
 -   `clarity`: the clarity of the diamond with levels IF (internally flawless), VVS1, VVS2 (very, very slightly imperfect), VS1 and VS2 (very slightly imperfect);
 -   `certification`: body of certification with levels GIA (Gemmological Institute of America), IGI (International Gemmological Institute) and HRD (Hoge Radd Voor Diamant).
 
-The price of a diamond  and its weight are quantitative variables. The colour purity, the clarity and the certifying institution are all categorical variables.
+The price of a diamond and its weight are quantitative variables. The colour purity, the clarity and the certifying institution are all categorical variables.
 
 ## Part 3: Structure of dataframe
 
 Next we consider the dataframe `Diamond` that has been assigned the dataset.
+
 ```{r, str}
 str(Diamond)
 ```
+
 In the dataframe the variables `price` and `carat` are quantitative and recognized as having a `numeric` and `integer` data type respectively. In contrast, `colour`, `clarity` and `certification` are listed as having `character` as their data type.
 
 ## Part 5: Summary of the dataset
 
 For quantitative variables the `summary` command gives a five point summary as well as the mean. For factor variables it provides the counts for each level.
+
 ```{r}
 summary(Diamond)
 ```
@@ -66,6 +69,7 @@ plot(price ~ carat,  data=Diamond,  xlim=c(0, 1.15), col="navy",
      xlab="weight of diamond (in carat)", 
      ylab="price of diamond (in Singapore Dollars)")
 ```
+
 The scatterplot in Figure 1 shows a non-linear positive relationship. The price of a diamond increases with weight with the rate of change increasing with weight. We also observe that the prices have a larger variation for larger diamonds. So if we fit a simple linear regression model, both linearity and constant variance will be violated.
 
 ## Part 7 + 8: log-transforming the quantitative variables
@@ -81,19 +85,23 @@ plot(log_price ~ log_carat, data=Diamond,
      ylab="log-price of diamond (in log-S$)", 
      col="navy")
 ```
+
 After the log-log transformation the relationship looks more linear, so it does seem reasonable to model this relationship using a straight line. We also observe that the variance has somewhat stabilised.
 
 ## Part 9 - 11: log-Price vs clarity
 
 Next we explore the relationship between the log-transformed price and the factor variable `clarity` using comparative boxplots.
+
 ```{r, fig.cap="Boxplots of log-price grouped by clarity."}
 boxplot(log_price ~ clarity, data = Diamond,
         xlab="diamond clarity rating",
         ylab="log-price of diamond (in log-S$)")
 ```
+
 The price of a diamond appears to depend on its clarity rating. But note that the ordering of the boxplots is not helpful.
 
 Using the `factor` command, we can re-order the levels of `clarity` according to increasing clarity rating.
+
 ```{r}
 levels(Diamond$clarity)
 Diamond$clarity <- factor(Diamond$clarity, c("VS2", "VS1", "VVS2", "VVS1", "IF"))
@@ -105,43 +113,45 @@ boxplot(log_price ~ clarity, data=Diamond,
         xlab="diamond clarity rating",
         ylab="log-price of diamond (in log-S$)")
 ```
-In Figure 4 we observe a somewhat counter-intuitive result.  The diamonds with the highest clarity rating tend to attract the lowest prices. Let's investigate this further.
+
+In Figure 4 we observe a somewhat counter-intuitive result. The diamonds with the highest clarity rating tend to attract the lowest prices. Let's investigate this further.
 
 ```{r fig.cap="Boxplots of log-weight grouped by clarity."}
 boxplot(log_carat ~ clarity, data = Diamond,
         xlab="diamond clarity rating",
         ylab="log-weight of diamond (in log-carat)")
 ```
+
 We observe that the diamonds with the highest clarity rating tend to be smaller, that is have the lowest weight in carat. As we observed earlier, smaller diamonds tend to cost less, so this may explain why the diamonds with the highest clarity rating tend to attract the lowest price.
 
-## Part 12 - 14: log_price ~ log_c_carat + clarity
+## Part 12 - 14: log_price \~ log_c_carat + clarity
 
 ```{r}
 Diamond$log_c_carat <- Diamond$log_carat - log(mean(Diamond$carat))
 diamond.mlr <- lm(log_price ~ log_c_carat + clarity, data=Diamond)
 summary(diamond.mlr)
 ```
-The reference category is the lowest clarity rating, namely VS2 (very slightly imperfect 2). The model fits one regression line for each clarity rating and thus five regression lines in total. These lines may have differing intercept but all have the same slope, thus they are parallel lines. The interpretation here is that diamonds with better clarity ratings start with a higher intercept. The model has equation:
-$$
+
+The reference category is the lowest clarity rating, namely VS2 (very slightly imperfect 2). The model fits one regression line for each clarity rating and thus five regression lines in total. These lines may have differing intercept but all have the same slope, thus they are parallel lines. The interpretation here is that diamonds with better clarity ratings start with a higher intercept. The model has equation: $$
 \begin{align*}
-\log(\widehat{\texttt{price}_i}) = &\hat\beta_0 + \hat\beta_1 \log(\texttt{c_carat}_i) + \hat\beta_2 1(\texttt{clarity == VS1}) + \hat\beta_3 1(\texttt{clarity == VVS2})\\
-&+ \hat\beta_4 1(\texttt{clarity == VVS1}) + \hat\beta_5 1(\texttt{clarity == IF})
+\log(\widehat{\texttt{price}_i}) = &\hat\beta_0 + \hat\beta_1 \log(\texttt{c_carat}_i) + \hat\beta_2 1(\texttt{clarity}_i = \texttt{VS1}) + \hat\beta_3 1(\texttt{clarity}_i = \texttt{VVS2})\\
+&+ \hat\beta_4 1(\texttt{clarity}_i = \texttt{VVS1}) + \hat\beta_5 1(\texttt{clarity}_i = \texttt{IF})
 \end{align*}
 $$
 
--  For diamonds with clarity rating `VS2`, the relation between log-price and log-weight has intercept $8.29$.
--  For diamonds with clarity rating `VVS1`, the relation between log-price and log-weight has intercept $8.29+0.22 = 8.51$.
+-   For diamonds with clarity rating `VS2`, the relation between log-price and log-weight has intercept $8.29$.
+-   For diamonds with clarity rating `VVS1`, the relation between log-price and log-weight has intercept $8.29+0.22 = 8.51$.
 
-## Part 15 - 16: log_price ~ 0 + log_c_carat + clarity
+## Part 15 - 16: log_price \~ 0 + log_c_carat + clarity
 
 ```{r, eval=T}
 diamond.mlr2 <- lm(log_price ~ 0 + log_c_carat + clarity, data=Diamond)
 summary(diamond.mlr2)
 ```
-If we remove the general intercept term in the regression model, there is an extra term `clarityVS2`. The coefficients from the second to the last terms show the exact intercept for each clarity rate.
-$$
+
+If we remove the general intercept term in the regression model, there is an extra term `clarityVS2`. The coefficients from the second to the last terms show the exact intercept for each clarity rate. $$
 \begin{align*}
-\log(\widehat{\texttt{price}_i}) = &\hat\beta_1 \log(\texttt{c_carat}_i) + \hat\beta_2 1(\texttt{clarity == VS2}) + \hat\beta_3 1(\texttt{clarity == VS1})\\
-&+ \hat\beta_4 1(\texttt{clarity == VVS2}) + \hat\beta_5 1(\texttt{clarity == VVS1}) + \hat\beta_6 1(\texttt{clarity == IF})
+\log(\widehat{\texttt{price}_i}) = &\hat\beta_1 \log(\texttt{c_carat}_i) + \hat\beta_2 1(\texttt{clarity}_i = \texttt{VS2}) + \hat\beta_3 1(\texttt{clarity}_i = \texttt{VS1})\\
+&+ \hat\beta_4 1(\texttt{clarity}_i = \texttt{VVS2}) + \hat\beta_5 1(\texttt{clarity}_i = \texttt{VVS1}) + \hat\beta_6 1(\texttt{clarity}_i = \texttt{IF})
 \end{align*}
 $$
