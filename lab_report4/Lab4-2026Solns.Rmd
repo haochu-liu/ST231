@@ -1,0 +1,161 @@
+---
+title: "ST231 Lab Report 4"
+date: 'Deadline: 24 February 2026, 1 pm'
+output:
+  pdf_document: 
+    keep_tex: true
+  html_document: default
+fontsize: 12 pt
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, out.width="60%", fig.align="center", comment="", message= FALSE)
+```
+
+# Data Description
+
+The data in the file `dia4.csv` is an adapted subset from the `diamonds` dataset in the `ggplot2` package. It consists of information on 600 round diamonds. The variables considered for this lab report are:
+
+- `price`: the sale price of the diamond in US Dollars.
+- `carat`: the weight of the diamond in carat.
+- `cut`: the quality of the cut of the diamond which, in increasing order, is one of "Fair", "Very Good" and "Ideal".
+
+
+
+# Instructions
+
+**Carefully read the [Lab Report Guidance](https://moodle.warwick.ac.uk/mod/page/view.php?id=2767925) on moodle before you start working on this lab report!**
+
+
+1. **[2 marks]** Fit a linear model (Model 1) of log-price on log-weight. Produce a Residuals versus Leverage plot.  Note the three observations that the plot identifies as most influential and list their price, weight, cut, leverage, standardised residual and Cook's distance in a table.
+
+2. **[2 marks]** Next, fit a  linear model (Model 2) of log-price on log-weight to the diamonds with a fair cut only. 
+Produce a scatterplot of log-price against log-weight for the whole dataset. Add the fitted lines for Model 1 and Model 2. Also identify the three most influential observations in the plot, for example by using a different colour or symbol.  Critically comment on the plot.  
+
+3. **[2 marks]** Plot the standardised residuals for Model 1 against log-weight colour-coded (or shown with different symbols) by `cut`. Critically comment on the plot.  
+
+4. **[2 marks]** Consider the observation with the largest influence on the model fit for Model 1. Use the characteristics of the observation, what you observed in Parts 1 - 3 and the application context to explain why this observation has a large Cook's distance.
+
+**[2 marks]** for style and quality of presentation.
+
+\newpage
+
+**Solutions:**
+
+1. Figure 1 below shows the Residuals versus Leverage plot of the linear model of log-price on log-weight. The three observations with the highest Cook's distance are labelled. These are observations 78, 137 and 187. Table 1 gives the price, weight, cut, leverage, standardised residual and Cook's distance for the three observations that were identified as most influential in Figure 1.
+
+```{r, fig.cap="Residuals versus Leverage plot for the linear model of log-price on log-weight.", fig.alt="Residuals versus Leverage plot for the linear model of log-price on log-weight. The three most influential observations are labelled as 78, 137 and 187."}
+dia4 <- read.csv("dia4.csv")
+lm.out <- lm(log(price) ~ log(weight), data=dia4)
+plot(lm.out, 5)
+```
+
+
+
+  
+
+```{r, InfluenceStats}
+require("kableExtra")
+cd <- cooks.distance(lm.out)
+hv <- hatvalues(lm.out)
+res <- rstandard(lm.out)
+idx <- sort(order(cd, decreasing = TRUE)[1:3])
+
+df <- data.frame(obs=idx, dia4[idx,], hv=hv[idx], res=res[idx], cd=cd[idx], row.names=NULL)
+colnames(df) <- c("Obs", "Price", "Weight", "Cut", "Leverage", "Std. Residual", "Cook's distance")
+
+kable(df, caption="The most influential observations in Model 1.", digits=3) %>% kable_paper(full_width=F) 
+  
+```
+
+
+2. Figure 2 shows a scatterplot of log-price against log-weight. Added to the plot are the fitted lines for Model 1 (fitted to the complete dataset) and Model 2 (fitted to the diamonds of fair cut). We note that the line fitted to the diamonds of fair cut is less steep than the line fitted to the whole dataset. This means that for diamonds of fair cut the increase in log-price for a given increase in log-weight tends to be smaller than predicted by Model 1. The heaver the fair cut diamond, the greater this difference is.
+Also added to the plot are the three most influential observations which all correspond to relatively large diamonds. All three observations lie well below the fitted line of Model 1 but also below the fitted line of Model 2. 
+
+```{r, SeveralRegressions, fig.cap="Scatterplot of log-price against log-weight with fitted lines for Model 1 and Model 2. The larger red dots correspond to the three most influential observations.", fig.alt="Scatterplot of log-price against log-weight with fitted lines for Model 1 and Model 2. The larger red dots correspond to the three most influential observations. The main text describes the figure in more detail." }
+
+model1 <- lm(log(price) ~ log(weight), data=dia4)
+model2 <- lm(log(price) ~ log(weight), data=subset(dia4, cut=="Fair"))
+
+plot(log(price) ~ log(weight), cex=0.25, col="grey", xlab="log-weight (in log-carat)", 
+     ylab="log-price (in log-$)", data=dia4)
+abline(model1, lwd=1.5); abline(model2, col="red", lty=2, lwd=1.5); 
+
+points(log(dia4$weight[c(78, 137, 187)]), log(dia4$price[c(78, 137, 187)]), col="red", pch=16, cex=0.75)
+legend("bottomright", legend="most influential observations", cex=0.75, pch=16, col="red")
+legend("topleft", legend=c("for complete data set", "for diamonds of poor cut"), title="fitted model", lwd=1.5, lty=c(1,2), col=c("black", "red"), cex=0.75)
+```
+
+\newpage 
+
+3. The figure below shows a scatterplot of the standardised residuals for Model 1 against log-weight. The colour-coding reveals that the heaviest diamonds in the data set tend to have a fair cut. More importantly, the colour-coding reveals a systematic structure that is not accounted for by the model. Diamonds with a fair cut tend to have negative residuals, while diamonds with a very good or ideal cut, tend to have positive residuals. This provides support for the inclusion of `cut` as an additional explanatory variable in the model. 
+
+```{r, ResidualPlotColourByCut, fig.cap="A scatterplot of standardised residuals of Model 1 against log-weight.", fig.alt="A scatterplot of standardised residuals of Model 1 against log-weight. The observations are colour-coded by cut and show a systematic structure as explained in the main body of text."  }
+ind <- ifelse(dia4$cut=="Fair", 1, ifelse(dia4$cut == "Very Good", 2, 3))
+library(RColorBrewer)
+col <-  brewer.pal(3, "Dark2")
+lm.out <- lm(log(price) ~ log(weight), data=dia4)
+res <- rstandard(lm.out)
+plot(res ~ log(weight), data=dia4,
+     col=col[ind], pch=ind, cex=0.5, 
+     xlab="log-weight (in log-carat)",
+     ylab="standardised residuals",
+     main="Regression of log-price on log-weight")
+legend("topright", legend=c("Fair", "Very Good", "Ideal"), pch=c(1,2,3), col=col, title="diamond cut", cex=0.75)
+
+```
+
+4. Observation 137 has the largest Cook's distance and is thus the most influential observation.
+It is a diamond with a fair cut and weighs `r dia4$weight[137]` carat. It is the heaviest diamond in the dataset with a weight that is more than three times the mean weight of `r round(mean(dia4$weight),2)` carat. For comparison, the second heaviest diamond is `r sort(dia4$weight,decreasing=TRUE)[2]` carat. As leverage measures how unusual the predictor values are within a given the dataset, this results in observation 137 having the highest leverage within the dataset as can be seen in Figure 1 and Table 1. 
+
+   Furthermore, the table in Part 1 shows that observation 137 has a large negative standardised residual equal to -3.56. Figures 2 and 3 demonstrate that the model fitted to the complete dataset tends to over-estimate the price for diamonds of fair cut. Figure 2 shows that overprediction is worse for heavier diamonds, such as Observation 137, which results in a large negative residual.  
+
+   Because Cook’s distance reflects both leverage and residual size, the high leverage and large negative residual of Observation 137 make it the most influential observation.
+  
+\newpage
+
+# Marking instructions
+
+You may give half marks for minor mistakes but this should be done sparingly.
+
+**If students have fitted the wrong model, then please deduct 1 mark for Q1 but award marks if they answer the rest of the questions as appropriate for their wrong model.**
+
+**Marking instructions for Q1 [2 marks]**
+
+- 1 mark for correct plot.
+- 1 mark for correct table (formatting/rounding as described below is addressed in presentation mark)
+
+You may penalise for not having a formatted table in the presentation mark, but be generous if there has been some attempt to format it. Formatting tables in R markdown is an art in itself.
+So if the table is raw R output or the numbers have not been appropriately rounded (no more than 4 dp), then give no more than 1 mark in the presentation mark. 
+
+
+**Marking instructions for Q2 [2 marks]**
+
+- 1 mark for correct plot with both fitted lines and influential points identified. (Deduct 0.5 mark if one of the items is missing.)
+- 1 mark for commenting sensibly on the difference in slope between fitted lines - they answer should indicate what that means in the context of the example - overestimation of price for fair cut diamonds.
+
+
+**Marking instructions for Q3 [2 marks]**
+
+- 1 mark for correct plot with colour- or symbol-coding (deduct 0.5 mark if coding is missing)
+- 1 mark for noting systematic pattern, that is residuals are mostly negative for fair cut diamonds.
+
+No explanation beyond noting the negative residuals is needed. 
+
+**Marking instruction for Q4 [2 marks]**
+
+- 0.5 mark for noting high leverage + 0.5 mark for explaining why (unusually heavy diamond).
+- 0.5 mark for noting large negative standardised residual + 0.5 mark for noting this stems from overestimating price for fair cut diamonds.
+
+
+
+**Style and Presentation: [2 marks]**
+
+ - 2 marks for strong presentation
+ - 1 mark if minor deficiencies
+ - 0 marks if  major issues
+ 
+For presentation of plots consider: labelled axes, appropriate size, appropriate use of colour, clear and numbered captions, legends where needed. 
+
+For general presentation consider rounding of numerical results, clear definition of models, general formatting, results presented in full sentences or neat tables and not raw R output, no irrelevant content (eg no code that has not been asked for, messages of packages being loaded that have not been suppressed and similar).
