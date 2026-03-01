@@ -1,0 +1,186 @@
+---
+title: "Practical Report 7"
+output:
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    highlight: monochrome
+  html_document:
+    df_print: paged
+    code_folding: hide
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="55%", comment="")} else {opts_chunk$set(comment="", out.width="55%")}
+```
+
+
+# Effectiveness of blood pressure treatment {-}
+
+## Part a.
+
+Before fitting linear models we first explore the data graphically to assess whether a linear model is appropriate.
+```{r, LoadData, echo=FALSE}
+bpdata <- read.csv("bpdata.csv")
+```
+
+```{r, 1a1, fig.align='center', out.width="55%", fig.cap="A scatterplot of change in blood pressure against the initial blood pressure.", fig.alt="A scatterplot of change in blood pressure (BPchange) against the initial blood pressure (BPInit) showing a linear relationship."}
+plot(BPchange ~ BPinit, data=bpdata, pch=16, ylim = c(-20,0),
+     xlab="Initial blood pressure (mmHg)", 
+     ylab="Change in blood pressure (mmHg)")
+```
+
+
+In Figure 1 we observe that for all patients the blood pressure was lower in the second measurement as all values of the change in blood pressure are negative.^[Note that the scatterplot is annotated with a description of the variables and the units of measurement!] The scatterplot shows that with increasing initial blood pressure the reduction in blood pressure becomes larger. The relationship between initial blood pressure and the change of blood pressure appears linear. The spread of the observations is fairly constant across most of the range of initial blood pressures. The observed variation is smaller for initial blood pressures less than 120 mmHg, but this could be due to the small number of observations in this range. 
+
+
+```{r, 1a2, fig.cap="A scatterplot of change in blood pressure against the dose of the new drug.", fig.alt ="A scatterplot of change in blood pressure (BPchange) against the dose of the new drug (Dose) showing a linear relationship.", out.width="55%", fig.align='center', eval=F}
+plot(BPchange ~ Dose, data=bpdata, pch=16, 
+     xlab=expression(paste("Dose (", mu,"g)")), 
+     ylab="Change in blood pressure (mmHg)")
+```
+
+
+
+Next we consider the relationship between  the dose of the treatment and the change in blood pressure. If we use a standard scatterplot, then this leads to overplotting of datapoints. This can be avoided by jittering the response values which adds a little noise to the datapoints.^[Alternatively we could have used grouped boxplots, but, given this is a relatively small dataset, a stripchart like the one in Figure 2 will suffice. Here we only jittered the response values, but for larger datasets we might also consider jittering the predictor values.] We observe in Figure 2 that the reduction in blood pressure tends to become larger as the dose increases  and it appears reasonable to assume a linear relationship between blood pressure and dose. We observe that the spread of the response appears larger for a dose of 30$\mu$g  than for the other dosages. 
+
+```{r, 1a3, fig.cap ="A scatterplot of change in blood pressure (BPchange) against the dose of the new drug (Dose). The observations are slightly jittered.", fig.alt ="A scatterplot of change in blood pressure (BPchange) against the dose of the new drug (Dose) showing a linear relationship. The observations are slightly jittered.", out.width="60%", fig.align='center'}
+plot(jitter(BPchange, amount=0.2) ~ Dose, data=bpdata, 
+     xlab=expression(paste("Dose (", mu,"g)")), 
+     ylab="Change in blood pressure (mmHg)")
+```
+
+
+## Part b
+
+We first fit the model  $${\mathbb E}[\texttt{BPchange}_i]\quad = \quad \beta_0+\beta_1\texttt{BPinit}_i+\beta_2\texttt{Dose}_i$$
+where $i =1, \ldots, 40.$
+
+```{r, 1b, comment="", echo=FALSE}
+lm.out <- lm(BPchange ~ BPinit + Dose, data=bpdata)
+```  
+
+
+## Part c
+Next we convert `Dose` to a factor which allows us to model a non-linear dose-response relationship before fitting a new model.
+
+1. Including a zero in the formula removes the intercept term. As discussed in the lectures, if there is a factor variable in the model and a zero is included in the formula, `R` will fit a separate intercept term for each level of the first factor (including the reference level).
+The formula for the model is:
+  $${\mathbb E}[\texttt{BPchange}_i]\quad  = \quad \alpha_{\text{Dose}_i}+\beta_1 (\texttt{BPinit}_i - \overline{\texttt{BPinit}})$$
+where $\overline{\texttt{BPinit}}$ is the average initial blood pressure and ${\text{Dose}_i}$ is the dose level for the $i$th unit of observation. 
+
+2.  The parameter $\alpha_k$ is the expected change in blood pressure for a person with average initial blood pressure given dose $k$.
+
+3. We can read the estimates for the factor model directly from the output of the `summary()` function or extract them using `coef()`. For the linear regression model in b. we use the `predict()` function to get the expected change for each dose for a person with average blood pressure:  
+    ```{r}
+lm.factor <- lm(BPchange ~  0 + factor(Dose) + I(BPinit - mean(BPinit)), 
+                data=bpdata)
+# Expected blood pressure change for each dose in the factor model
+cfac <- coef(lm.factor)[1:4]
+# Expected blood pressure change for each dose in the linear model
+BPmean <- mean(bpdata$BPinit)
+DoseF <- c(10,20,30,40)
+clin <- predict(lm.out, newdata=list(Dose=DoseF, BPinit=rep(BPmean, 4)))
+    ```  
+  
+A side-by-side comparison of the estimates is contained in the table below:
+      
+```{r}
+tabl <- cbind("Dose"=DoseF,"Factor Model"=cfac, "Linear Model"=clin)
+rownames(tabl)<-NULL
+kable(round(tabl, 1))
+```
+
+## Part d
+Next we consider the collaborator's enquiry.
+
+1. The coefficient of `Dose` is the expected change in blood pressure for a 1$\mu$g dose. To estimate the effect of a 50$\mu$g dose we need to multiply the coefficient by 50. To avoid spurious precision, we round to one decimal place. Thus, controlling for initial blood pressure, the effect of a 50$\mu$g dose is an expected reduction in blood pressure by `r -round(50 * coef(lm.out)["Dose"], 1)` mmHg.
+    
+2. The factor model cannot tell us anything about the effect of a 50$\mu$g dose. The effect of factor variables cannot be extrapolated beyond the levels observed when the model is fitted.
+    
+3. A 100$\mu$g dose is well beyond the limits of the doses observed in the study. There is no reason to be confident that the dose-response effect will be linear this far beyond the range of the observed data.
+
+\newpage
+
+# Polynomial regression {-}
+
+## Part a
+
+As usual in any data analysis project, we start with a plot of the data. We observe a non-linear and non-monotonic relationship between the explanatory variable and the response which we model using a cubic regression model.
+
+```{r, FitModel, fig.cap="A scatterplot of the data.", fig.align='center', fig.alt="A scatterplot of the data showing a curvilinear relationship between the predictor x and response y.", eval=T}
+# Read data
+poldata <- read.csv("poldata.csv")
+# Fit polynomial model
+m3 <- lm(y ~ x + I(x^2) + I(x^3), data=poldata) #Cubic model
+# Plot of the data
+plot(y ~ x, data=poldata, pch=16)
+# Vector of x values at which to compute fitted y value
+ax <- seq(from=2, to=6, length=101)
+# Compute fitted values 
+p <- predict(m3, newdata=list(x=ax))
+# Plot smooth line through fitted values
+lines(ax, p)
+```
+
+
+## Part b
+Next, for the cubic model we illustrate a 95\% confidence interval for the mean function and a 95\% prediction interval for every value of $x$.  
+
+```{R, CIs, fig.align='center', fig.cap="Scatterplot of the data together with the fitted cubic regression curve as well as a 95% confidence interval and a 95% prediction interval for every point along the curve.",fig.alt="A scatterplot of the data with the fitted cubic regression curve, together with 95 percent confidence interval for the mean function and 95 percent prediction intervals for the response for every point along the curve. The prediction interval is wider that than the confidence interval.", echo=F }
+# Create a sequence of x-values
+ax <- seq(from=2, to=6, length=101)
+# compute the confidence interval and the prediction interval for each x-value
+p2 <- predict(m3, newdata=list(x=ax), interval="confidence")
+p3 <- predict(m3, newdata=list(x=ax), interval="prediction")
+# plot the data such that all prediction intervals fit on the plot
+plot(y ~ x, data=poldata, ylim=range(p3), pch=16)
+# plot smooth lines through the prediction interval endpoints
+matlines(ax, p2, col=c("black", "blue", "blue"), lty=c(1,3,3))
+matlines(ax, p3, col=c("black", "red", "red"), lty=c(1,2,2))
+legend("topright", 
+       legend=c("fitted mean function", 
+                "95% confidence interval", 
+                "95% prediction interval"), 
+       col=c("black", "blue", "red"), lty=c(1,3,2), cex=0.9)
+```
+
+We observe in Figure 2 that the confidence interval is narrower than the corresponding prediction interval.
+
+
+## Part c
+
+Next we consider a the scatter plot with extended $x$-axis and prediction intervals for the cubic model.
+
+```{R, Extrapolation, fig.width=5, fig.height = 4, fig.align='center', fig.cap="Scatterplot of the data together with the fitted cubic regression curve. The dashed lines indicate the 95% prediction interval for every point along the curve.", fig.alt="A scatterplot of the data with the fitted cubic regression curve. The curve fits the data well. For values of x less than 2 (for which there are no observations in the data) the fitted curve is decreasing. The prediction interval is added to the plot and widens noticeably for values close to x=zero.", echo=F }
+# Create a sequence of x-values
+ax <- seq(from=0, to=6, length=101)
+# compute the prediction interval for each x-value
+p <- predict(m3, newdata=list(x=ax), interval="prediction")
+# plot the data such that all prediction intervals fit on the plot
+plot(y ~ x, xlim=c(0, 6), data=poldata, ylim=range(p), pch=16)
+# plot smooth lines through the prediction interval endpoints
+matlines(ax, p, col="black", lty=c(1,2,2))
+```
+
+We observe in Figure 3 that the prediction interval becomes wider as we move away from the centre of the data.
+
+
+
+## Part d
+
+If the model is true, that is it represents the true
+  data-generating mechanism, then the prediction is valid. However, we
+  do not know if it is true. One reason to be skeptical is that the
+  cubic model shows a maximum around $x=2$ and then a decrease for
+  smaller values of $x$, despite no evidence from the data that there
+  is a turning point in the predictor-response relationship. Note that this
+  behaviour is built into the cubic model. If the fitted curve has a
+  local minimum then it must have a local maximum somewhere, even if
+  the observed data show no sign of this.
+
+
+
