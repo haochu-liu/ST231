@@ -1,0 +1,12 @@
+---
+title: "Lab 4 solution"
+author: "Haochu"
+format:
+  revealjs:
+    code-fold: false
+    scrollable: true
+    fontsize: 18pt
+---
+
+## Question 1
+
