@@ -18,53 +18,69 @@ pdf_doc <- knitr::is_latex_output()
 if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%")} else {opts_chunk$set(echo=TRUE)}
 ```
 
-# Effectiveness of blood pressure treatment {-}
+# Effectiveness of blood pressure treatment {.unnumbered}
 
-a. Before fitting linear models we first explore the data graphically to assess whether a linear model is appropriate.
+## A
+Before fitting linear models we first explore the data graphically to assess whether a linear model is appropriate.
+
 ```{r, LoadData, echo=FALSE}
-bpdata <- read.csv("bpdata.csv")
+bpdata <- read.csv("../data/bpdata.csv")
 ```
 
 ```{r, Plot1, echo=FALSE, fig.cap="A scatterplot of change in blood pressure against the initial blood pressure."}
+plot(BPchange ~ BPinit, data=bpdata, pch=16, ylim = c(-20,0),
+     xlab="Initial blood pressure (mmHg)", 
+     ylab="Change in blood pressure (mmHg)")
+```
+For all patients the blood pressure was lower in the second measurement as all values of the change in blood pressure are negative. The scatterplot shows that with increasing initial blood pressure the reduction in blood pressure becomes larger. The relationship between initial blood pressure and the change of blood pressure appears linear. The observed variation is smaller for initial blood pressures less than 120 mmHg, but this could be due to the small number of observations in this range.
 
+```{r, Plot2, echo=FALSE, fig.cap ="A scatterplot of change in blood pressure against the dose of the new drug."}
+plot(BPchange ~ Dose, data=bpdata, pch=16, 
+     xlab=expression(paste("Dose (", mu,"g)")), 
+     ylab="Change in blood pressure (mmHg)")
 ```
 
-```{r, Plot2, echo=FALSE, fig.cap ="A scatterplot of change in blood pressure (BPchange) against the dose of the new drug (Dose). The observations are slightly jittered."}
-
+```{r, Plot2_2, echo=FALSE, fig.cap ="A scatterplot of change in blood pressure (BPchange) against the dose of the new drug (Dose). The observations are slightly jittered."}
+plot(jitter(BPchange, amount=0.2) ~ Dose, data=bpdata, 
+     xlab=expression(paste("Dose (", mu,"g)")), 
+     ylab="Change in blood pressure (mmHg)")
 ```
 
-<!--- Comment on the plots --->
+Jittering the response values which adds a little noise to the datapoints. We observe that the reduction in blood pressure tends to become larger as the dose increases and it appears reasonable to assume a linear relationship between blood pressure and dose. We observe that the spread of the response appears larger for a dose of 30$\mu$g than for the other dosages.
 
+## B
 
-b. We first fit the model  $${\mathbb E}[\texttt{BPchange}_i]\quad = \quad \beta_0+\beta_1\texttt{BPinit}_i+\beta_2\texttt{Dose}_i$$
-where $i =1, \ldots, 40.$
+We first fit the model $${\mathbb E}[\texttt{BPchange}_i]\quad = \quad \beta_0+\beta_1\texttt{BPinit}_i+\beta_2\texttt{Dose}_i$$ where $i =1, \ldots, 40.$
 
 ```{r, 1b,  echo=FALSE}
-lm.out <- 
-```  
+lm.out <- lm(BPchange ~ BPinit + Dose, data=bpdata)
+summary(lm.out)
+```
 
-c. Next we convert `Dose` to a factor which allows us to model a non-linear dose-response relationship before fitting a new model.
+## C
 
-```{r, 1c,  echo=FALSE}
-lm.factor <- 
+Next we convert `Dose` to a factor which allows us to model a non-linear dose-response relationship before fitting a new model.
+
+```{r, 1c, echo=FALSE}
+lm.factor <- lm(BPchange ~  0 + factor(Dose) + I(BPinit - mean(BPinit)), 
+                data=bpdata)
 summary(lm.factor)
 ```
-   
-    1. The formula for the new model is:
 
-    2. <!--- Interpretation of parameter --->
+1. The mathematical expression is
+$$
+{\mathbb E}[\texttt{BPchange}_i]\quad  = \quad \alpha_{\text{Dose}_i}+\beta_1 (\texttt{BPinit}_i - \overline{\texttt{BPinit}}).
+$$
+2. The parameter $\alpha_k$ is the expected change in blood pressure for a person with average initial blood pressure (second term is zero) given dose $k$.
 
-    3. <!--- Comparison of estimates for factor Dose and corresponding estimate from the linear model --->
-  
-> A side-by-side comparison of the estimates is contained in the table below:
-
-  
-```{r, echo=TRUE}
+A side-by-side comparison of the estimates is contained in the table below:
+      
+```{r}
 # Expected blood pressure change for each dose in the linear model
 BPmean <- mean(bpdata$BPinit)
 DoseF <- c(10,20,30,40)
 clin <- predict(lm.out, newdata=list(Dose=DoseF, BPinit=rep(BPmean, 4)))
-    
+
 # Expected blood pressure change for each dose in the factor model
 cfac <- coef(lm.factor)[1:4]
 
@@ -73,58 +89,58 @@ require("knitr")
 tabl <- cbind("Dose"=DoseF,"Factor Model"=cfac, "Linear Model"=clin)
 rownames(tabl)<-NULL
 kable(round(tabl, 1))
-```  
+```
 
-d. Next we consider the collaborator's enquiry.
+## D
 
-    1. <!--- CI for the effect of a 50 50$\mu$g dose --->
-    
-    2. <!--- What does the factor model tell us about the effect of a 50$\mu$g dose?---> 
-    
-    3. <!--- Consider a  100$\mu$g dose ---> 
+Next we consider the collaborator's enquiry.
 
+1. The coefficient of `Dose` is the expected change in blood pressure for a 1$\mu$g dose. To estimate the effect of a 50$\mu$g dose we need to multiply the coefficient by 50. To avoid spurious precision, we round to one decimal place. Thus, controlling for initial blood pressure, the effect of a 50$\mu$g dose is an expected reduction in blood pressure by
+```{r}
+-as.numeric(round(50 * coef(lm.out)["Dose"], 1))
+```
 
+2. The factor model cannot tell us anything about the effect of a 50$\mu$g dose. The effect of factor variables cannot be extrapolated beyond the levels observed when the model is fitted.
 
+3. A 100$\mu$g dose is well beyond the range of our observed data. There is no reason to be confident that the dose-response effect will be linear this far beyond our observation.
 
-# Polynomial regression {-}
+# Polynomial regression
 
-a. We plot the data and then add the fitted curve from a cubic regression model.
+a.  We plot the data and then add the fitted curve from a cubic regression model.
 
     ```{R, cubic, echo=TRUE, fig.cap="Scatterplot of the polynomial data. Added to the plot is a fitted curbe from a polynomial regression model."}
-#
-poldata <- read.csv("poldata.csv")
-m3 <- lm(y ~ x + I(x^2) + I(x^3), data=poldata)
-# 
-ax <- seq(from=2, to=6, length=101)
-# 
-p1 <- predict(m3, newdata=list(x=ax))
-# 
-plot(y ~ x, data=poldata, ylim=range(p1), pch=16)
-lines(ax, p1)
+    #
+    poldata <- read.csv("poldata.csv")
+    m3 <- lm(y ~ x + I(x^2) + I(x^3), data=poldata)
+    # 
+    ax <- seq(from=2, to=6, length=101)
+    # 
+    p1 <- predict(m3, newdata=list(x=ax))
+    # 
+    plot(y ~ x, data=poldata, ylim=range(p1), pch=16)
+    lines(ax, p1)
     ```
 
 <!---  Comment on the plot --->
 
-
-b. <!--- Confidence and prediction intervals --->
+b.  <!--- Confidence and prediction intervals --->
 
     ```{R, echo=TRUE, fig.cap="" }
-# 
-p2 <- predict(m3, newdata=list(x=ax), interval="confidence")
-p3 <- predict(m3, newdata=list(x=ax), interval="prediction")
-# 
-plot(y ~ x, data=poldata, ylim=range(p3), pch=16)
-# 
-matlines(ax, p2, col=c("black", "blue", "blue"), lty=c(1,3,3))
-matlines(ax, p3, col=c("black", "red", "red"), lty=c(1,2,2))
-#
-legend("topright", legend=c("fitted mean function", 
+    # 
+    p2 <- predict(m3, newdata=list(x=ax), interval="confidence")
+    p3 <- predict(m3, newdata=list(x=ax), interval="prediction")
+    # 
+    plot(y ~ x, data=poldata, ylim=range(p3), pch=16)
+    # 
+    matlines(ax, p2, col=c("black", "blue", "blue"), lty=c(1,3,3))
+    matlines(ax, p3, col=c("black", "red", "red"), lty=c(1,2,2))
+    #
+    legend("topright", legend=c("fitted mean function", 
               "95% confidence interval", "95% prediction interval"), 
        col=c("black", "blue", "red"), lty=c(1,3,2), cex=0.9)
     ```
 
-
-c. <!--- Prediction interval for extended x-axis --->
+c.  <!--- Prediction interval for extended x-axis --->
 
 ```{r, echo=F, fig.cap=""}
 #
@@ -137,7 +153,4 @@ plot(y ~ x, xlim=c(0, 6), data=poldata, ylim=range(p))
 matlines(ax, p, col="black", lty=c(1,2,2))
 ```
 
-
-d. <!--- Predicting response for x=0? --->
-
-
+d.  <!--- Predicting response for x=0? --->
