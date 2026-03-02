@@ -21,6 +21,7 @@ if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%")} e
 # Effectiveness of blood pressure treatment {.unnumbered}
 
 ## A
+
 Before fitting linear models we first explore the data graphically to assess whether a linear model is appropriate.
 
 ```{r, LoadData, echo=FALSE}
@@ -32,6 +33,7 @@ plot(BPchange ~ BPinit, data=bpdata, pch=16, ylim = c(-20,0),
      xlab="Initial blood pressure (mmHg)", 
      ylab="Change in blood pressure (mmHg)")
 ```
+
 For all patients the blood pressure was lower in the second measurement as all values of the change in blood pressure are negative. The scatterplot shows that with increasing initial blood pressure the reduction in blood pressure becomes larger. The relationship between initial blood pressure and the change of blood pressure appears linear. The observed variation is smaller for initial blood pressures less than 120 mmHg, but this could be due to the small number of observations in this range.
 
 ```{r, Plot2, echo=FALSE, fig.cap ="A scatterplot of change in blood pressure against the dose of the new drug."}
@@ -67,14 +69,13 @@ lm.factor <- lm(BPchange ~  0 + factor(Dose) + I(BPinit - mean(BPinit)),
 summary(lm.factor)
 ```
 
-1. The mathematical expression is
-$$
-{\mathbb E}[\texttt{BPchange}_i]\quad  = \quad \alpha_{\text{Dose}_i}+\beta_1 (\texttt{BPinit}_i - \overline{\texttt{BPinit}}).
-$$
-2. The parameter $\alpha_k$ is the expected change in blood pressure for a person with average initial blood pressure (second term is zero) given dose $k$.
+1.  The mathematical expression is $$
+    {\mathbb E}[\texttt{BPchange}_i]\quad  = \quad \alpha_{\text{Dose}_i}+\beta_1 (\texttt{BPinit}_i - \overline{\texttt{BPinit}}).
+    $$
+2.  The parameter $\alpha_k$ is the expected change in blood pressure for a person with average initial blood pressure (second term is zero) given dose $k$.
 
 A side-by-side comparison of the estimates is contained in the table below:
-      
+
 ```{r}
 # Expected blood pressure change for each dose in the linear model
 BPmean <- mean(bpdata$BPinit)
@@ -95,35 +96,40 @@ kable(round(tabl, 1))
 
 Next we consider the collaborator's enquiry.
 
-1. The coefficient of `Dose` is the expected change in blood pressure for a 1$\mu$g dose. To estimate the effect of a 50$\mu$g dose we need to multiply the coefficient by 50. To avoid spurious precision, we round to one decimal place. Thus, controlling for initial blood pressure, the effect of a 50$\mu$g dose is an expected reduction in blood pressure by
+1.  The coefficient of `Dose` is the expected change in blood pressure for a 1$\mu$g dose. To estimate the effect of a 50$\mu$g dose we need to multiply the coefficient by 50. To avoid spurious precision, we round to one decimal place. Thus, controlling for initial blood pressure, the effect of a 50$\mu$g dose is an expected reduction in blood pressure by
+
 ```{r}
 -as.numeric(round(50 * coef(lm.out)["Dose"], 1))
 ```
 
-2. The factor model cannot tell us anything about the effect of a 50$\mu$g dose. The effect of factor variables cannot be extrapolated beyond the levels observed when the model is fitted.
+2.  The factor model cannot tell us anything about the effect of a 50$\mu$g dose. The effect of factor variables cannot be extrapolated beyond the levels observed when the model is fitted.
 
-3. A 100$\mu$g dose is well beyond the range of our observed data. There is no reason to be confident that the dose-response effect will be linear this far beyond our observation.
+3.  A 100$\mu$g dose is well beyond the range of our observed data. There is no reason to be confident that the dose-response effect will be linear this far beyond our observation.
 
 # Polynomial regression
 
-a.  We plot the data and then add the fitted curve from a cubic regression model.
+## A
 
-    ```{R, cubic, echo=TRUE, fig.cap="Scatterplot of the polynomial data. Added to the plot is a fitted curbe from a polynomial regression model."}
-    #
-    poldata <- read.csv("poldata.csv")
-    m3 <- lm(y ~ x + I(x^2) + I(x^3), data=poldata)
-    # 
-    ax <- seq(from=2, to=6, length=101)
-    # 
-    p1 <- predict(m3, newdata=list(x=ax))
-    # 
-    plot(y ~ x, data=poldata, ylim=range(p1), pch=16)
-    lines(ax, p1)
-    ```
+We plot the data and then add the fitted curve from a cubic regression model. We observe a non-linear and non-monotonic relationship between the explanatory variable and the response which we model using a cubic regression model.
 
-<!---  Comment on the plot --->
+```{R, cubic, echo=TRUE, fig.cap="Scatterplot of the polynomial data. Added to the plot is a fitted curbe from a polynomial regression model."}
+# Read data
+poldata <- read.csv("../data/poldata.csv")
+# Fit polynomial model
+m3 <- lm(y ~ x + I(x^2) + I(x^3), data=poldata) #Cubic model
+# Plot of the data
+plot(y ~ x, data=poldata, pch=16)
+# Vector of x values at which to compute fitted y value
+ax <- seq(from=2, to=6, length=101)
+# Compute fitted values 
+p <- predict(m3, newdata=list(x=ax))
+# Plot smooth line through fitted values
+lines(ax, p)
+```
 
-b.  <!--- Confidence and prediction intervals --->
+## B
+
+<!--- Confidence and prediction intervals --->
 
     ```{R, echo=TRUE, fig.cap="" }
     # 
