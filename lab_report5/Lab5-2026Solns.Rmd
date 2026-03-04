@@ -1,0 +1,127 @@
+---
+title: "ST231 Lab Report 5"
+date: 'Deadline: 03 March 2026, 1 pm'
+output:
+  pdf_document: 
+    keep_tex: true
+  html_document: default
+fontsize: 12 pt
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, out.width="60%", fig.align="center", comment="", message= FALSE)
+```
+
+# Data Description
+
+The data in the file `dia5.csv` is an adapted subset from the `diamonds` dataset in the `ggplot2` package. It consists of information on 600 round diamonds. The variables considered for this lab report are:
+
+- `price`: the sale price of the diamond in US Dollars.
+- `carat`: the weight of the diamond in carat.
+- `cut`: the quality of the cut of the diamond which, in increasing order, is one of "Fair", "Very Good" and "Ideal".
+
+# Instructions
+
+1. **[3 marks]** Fit the following two linear models:
+
+   `Model 1: log(price) ~ log(weight)`  
+   `Model 2: log(price) ~ log(weight) + cut`.
+
+    Produce a plot of residuals against fitted values in which the observations are colour-coded (or differentiated by symbol) according to `cut`. Critically compare the two plots. What conclusion(s) can you draw? 
+
+
+2. **[3 marks]** Fit a third model that includes an interaction between log(weight) and cut. 
+
+   `Model 3: log(price) ~ log(weight) + cut + log(weight):cut`.
+   
+    Produce a plot of standardised residuals of Model 3 against log-weight but only include the residuals for the diamonds with a fair cut. Then add a line of best fit to the plot. (This should be the fitted line for the scatterplot produced, that is the fitted line of a regression of the standardised residuals on log-weight for fair cut diamonds.) 
+    
+    Produce the equivalent plot for Model 2.  Critically compare the two plots. What conclusion(s) can you draw?
+   
+3. **[2 marks]** Explain in a language understandable by a lay person, say a diamond trader, what conclusions you have drawn from your investigations in Question 1 and 2. (Note that your explanations should be in the original scale, not the log-scale).
+
+
+**[2 marks]** for style and quality of presentation.
+
+\newpage
+
+**Solutions:**
+
+1. Figure 1 below shows two scatterplots of residuals against fitted values. On the left is the residual plot for Model 1, that is from a regression of log-price on log-weight. On the right is the residual plot for Model 2, that is from a regression of log-price on log-weight and cut. The residuals have been colour/symbol-coded according to cut. We note in the left plot that the residuals for fair-cut diamonds tend to be negative. This systematic structure is resolved in the right plot where the residuals for each cut category scatter more evenly above and below the smoother. This provides support for including `cut` as a predictor variable in the model. Therefore we conclude that Model 2 is more appropriate for the dataset than Model 1.
+
+```{r, fig.cap="Residuals versus fitted values plots. Left: Residual plot for Model 1, that is the linear model of log-price on log-weight. Right: Residual plot for Model 2, that is the linear model of log-price on log-weight and cut.", fig.alt="Residuals versus fitted values plots. Left: Residual plot for Model 1, that is the linear model of log-price on log-weight. Right: Residual plot for Model 2, that is the linear model of log-price on log-weight and cut. Features of the plot are discussed in the main body of text.", fig.show='hold', out.width="48%"}
+dia5 <- read.csv("dia5.csv")
+lm1.out <- lm(log(price) ~ log(weight), data=dia5)
+lm2.out <- lm(log(price) ~ log(weight) + cut, data=dia5)
+ind <- ifelse(dia5$cut=="Fair", 1, ifelse(dia5$cut == "Very Good", 2, 3))
+library(RColorBrewer)
+col <-  brewer.pal(3, "Dark2")
+plot(lm1.out, 1, col=col[ind], pch=ind)
+legend("topright", legend=c("Fair", "Very Good", "Ideal"), pch=c(1,2,3), col=col, title="diamond cut", cex=0.75)
+plot(lm2.out, 1, col=col[ind], pch=ind)
+legend("topright", legend=c("Fair", "Very Good", "Ideal"), pch=c(1,2,3), col=col, title="diamond cut", cex=0.75)
+
+
+```
+
+
+2. Figure 2 below shows scatterplots of standardised residuals against log-weight for fair cut diamonds. The left plot is for Model 2, that is a regression model of log-price on log-weight and cut fitted to the complete dataset. The right plot is for Model 3 which additionally includes an interaction between log-weight and cut. To aid the evaluation of each plot, lines of best fit have been added. We observe in the left plot that the residuals for small diamonds  tend to be positive while for larger diamonds they tend to be negative. This is also shown by the negative slope of the line of best fit and thus indicates that there is systematic structure within the data that is not explained by Model 2. In contrast, in the right plot the line of best fit is a horizontal line at zero. The residuals are relatively evenly distributed above and below the line, thus showing no systematic pattern. The plots support the inclusion of an interaction between cut and log-weight in the model. Thus Model 3 is preferable to Model 2, least for fair cut diamonds.
+
+**Note: In principle we should also consider how the models behave for the other diamond cuts, but to keep the lab report concise, I have not asked students to do so.**
+
+```{r, SeveralRegressions, fig.cap="Scatterplots standardised residuals against log-weight for fair cut diamonds for Model 2 (left) and Model 3 (right). A line of best fit has been added to both plots. ", fig.alt="Scatterplots standardised residuals against log-weight for fair cut diamonds for Model 2 (left) and Model 3 (right). A line of best fit has been added to both plots. The main text describes the figure in more detail.", fig.show='hold', out.width="48%"}
+
+lm3.out <- lm(log(price) ~ log(weight) + cut + cut:log(weight), data=dia5)
+res2 <- rstandard(lm2.out)
+res3 <- rstandard(lm3.out)
+ind <- dia5$cut=="Fair"
+plot(res2[ind] ~ log(dia5$weight[ind]), xlab="log-weight (in log-carat)", ylab="Standardised residuals")
+abline(lm(res2[ind] ~ log(dia5$weight[ind])), col="red")
+plot(res3[ind] ~ log(dia5$weight[ind]), xlab="log-weight (in log-carat)", ylab="Standardised residuals")
+abline(lm(res3[ind] ~ log(dia5$weight[ind])), col="red")
+```       
+
+\newpage
+
+3. Our analysis has shown that, in addition to the weight of a diamond, its cut is informative about its price. More specifically, we found evidence that for a given percentage increase in the weight of a diamond, the resulting percentage increase in the predicted price depends on the cut of the diamond. 
+
+  
+\newpage
+
+# Marking instructions
+
+You may give half marks for minor mistakes but this should be done sparingly.
+
+
+**Marking instructions for Q1 [3 marks]**
+
+- 1 mark for correct plots
+- 1 mark for describing systematic issue in left plot 
+- 1 mark for concluding Model 2 is more appropriate as issue is resolved.
+
+
+**Marking instructions for Q2 [3 marks]**
+
+- 1 marks for correct plots 
+- 1 mark for identifying systematic pattern for Model 2 (slope means residuals are correlated with fitted values)
+- 1 mark for explaining why Model 3 is more appropriate (correlation of residuals has been resolved.)
+
+If students give the correct plots but just comment on the slopes without explaining what this means, give 2/3.
+
+
+**Marking instructions for Q3 [2 marks]**
+
+- 1 mark for indicating that cut is informative for predicting price (deduct 1/2 mark if it is not mentioned that weight is also in the model)
+- 1 mark for describing the meaning of the interaction in an accessible manner. 
+
+Deduct 1 mark if explanations are not in the original scale. 
+
+**Style and Presentation: [2 marks]**
+
+ - 2 marks for correct and clearly labelled, well formatted plots and tables plus clear, concise and complete explanations
+ - 1 mark if minor deficiencies
+ - 0 marks if  major issues
+ 
+ For presentation of plots consider: labelled axis, appropriate size, appropriate use of colour, clear caption, legends where needed.
+For general presentation consider rounding of numerical results, clear definition of models, general formatting, results presented in full sentences or neat tables, no irrelevant content (eg no code that has not been asked for, messages of packages being loaded that have not been suppressed and similar).
