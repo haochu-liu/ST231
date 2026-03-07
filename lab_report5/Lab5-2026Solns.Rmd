@@ -51,7 +51,7 @@ The data in the file `dia5.csv` is an adapted subset from the `diamonds` dataset
 1. Figure 1 below shows two scatterplots of residuals against fitted values. On the left is the residual plot for Model 1, that is from a regression of log-price on log-weight. On the right is the residual plot for Model 2, that is from a regression of log-price on log-weight and cut. The residuals have been colour/symbol-coded according to cut. We note in the left plot that the residuals for fair-cut diamonds tend to be negative. This systematic structure is resolved in the right plot where the residuals for each cut category scatter more evenly above and below the smoother. This provides support for including `cut` as a predictor variable in the model. Therefore we conclude that Model 2 is more appropriate for the dataset than Model 1.
 
 ```{r, fig.cap="Residuals versus fitted values plots. Left: Residual plot for Model 1, that is the linear model of log-price on log-weight. Right: Residual plot for Model 2, that is the linear model of log-price on log-weight and cut.", fig.alt="Residuals versus fitted values plots. Left: Residual plot for Model 1, that is the linear model of log-price on log-weight. Right: Residual plot for Model 2, that is the linear model of log-price on log-weight and cut. Features of the plot are discussed in the main body of text.", fig.show='hold', out.width="48%"}
-dia5 <- read.csv("dia5.csv")
+dia5 <- read.csv("../data/dia5.csv")
 lm1.out <- lm(log(price) ~ log(weight), data=dia5)
 lm2.out <- lm(log(price) ~ log(weight) + cut, data=dia5)
 ind <- ifelse(dia5$cut=="Fair", 1, ifelse(dia5$cut == "Very Good", 2, 3))

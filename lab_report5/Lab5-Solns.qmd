@@ -10,87 +10,65 @@ format:
 
 ## Question 1
 
-@fig-1 below shows the Residuals versus Leverage plot of the linear model of log-price on log-weight. The three observations with the highest Cook's distance are labelled. These are observations 78, 137 and 187.
+Given two models:
 
-```{r Question1_1}
-#| label: fig-1
-#| fig-cap: "Residuals versus Leverage plot for the linear model of log-price on log-weight."
-dia4 <- read.csv("../data/dia4.csv")
-lm.out <- lm(log(price) ~ log(weight), data=dia4)
-plot(lm.out, 5)
-```
+-   `Model 1: log(price) ~ log(weight)`
+-   `Model 2: log(price) ~ log(weight) + cut`
 
 ## Question 1
 
-@tbl-1 gives the price, weight, cut, leverage, standardised residual and Cook's distance for the three observations that were identified as most influential in @fig-1.
+@fig-1 shows two scatterplots of residuals against fitted values. The left plot that the residuals for fair-cut diamonds tend to be negative. This systematic structure is resolved in the right plot where the residuals for each cut category scatter more evenly above and below the smoother. Hence Model 2 is more appropriate here.
 
-```{r Question1_2}
-#| label: tbl-1
-#| tbl-cap: "The most influential observations in Model 1."
-cd <- cooks.distance(lm.out)
-hv <- hatvalues(lm.out)
-res <- rstandard(lm.out)
-idx <- sort(order(cd, decreasing = TRUE)[1:3])
+```{r Q1}
+#| label: fig-1
+#| fig-cap: "Residuals versus fitted values plots. Left: Model 1. Right: Model 2."
 
-df <- data.frame(obs=idx, dia4[idx,], hv=hv[idx], res=res[idx], cd=cd[idx], row.names=NULL)
-colnames(df) <- c("Obs", "Price", "Weight", "Cut", "Leverage", "Std. Residual", "Cook's distance")
-df$Leverage <- round(df$Leverage, digits=3)
-df$`Std. Residual` <- round(df$`Std. Residual`, digits=3)
-df$`Cook's distance` <- round(df$`Cook's distance`, digits=3)
+library(RColorBrewer)
 
-knitr::kable(df)
+dia5 <- read.csv("../data/dia5.csv")
+lm1.out <- lm(log(price) ~ log(weight), data=dia5)
+lm2.out <- lm(log(price) ~ log(weight) + cut, data=dia5)
+ind <- ifelse(dia5$cut=="Fair", 1, ifelse(dia5$cut == "Very Good", 2, 3))
+col <-  brewer.pal(3, "Dark2")
+
+par(mfrow = c(1, 2))
+
+plot(lm1.out, 1, col=col[ind], pch=ind)
+legend("topright", legend=c("Fair", "Very Good", "Ideal"), pch=c(1,2,3), col=col, title="diamond cut", cex=0.75)
+plot(lm2.out, 1, col=col[ind], pch=ind)
+legend("topright", legend=c("Fair", "Very Good", "Ideal"), pch=c(1,2,3), col=col, title="diamond cut", cex=0.75)
+
+par(mfrow = c(1, 1))
 ```
 
 ## Question 2
 
-@fig-2 shows a scatterplot of log-price against log-weight. We note that the line fitted to the diamonds of fair cut is less steep than the line fitted to the whole dataset. This means that for diamonds of fair cut the increase in log-price for a given increase in log-weight tends to be smaller than predicted by Model 1. The heaver the fair cut diamond, the greater this difference is. All three observations lie well below the fitted line of Model 1 but also below the fitted line of Model 2.
+-   `Model 2: log(price) ~ log(weight) + cut`
+-   `Model 3: log(price) ~ log(weight) + cut + log(weight):cut`
 
-```{r Question2}
+## Question 2
+
+@fig-2 below shows scatterplots of standardised residuals against log-weight for fair cut diamonds. We observe in the left plot that the residuals for small diamonds tend to be positive while for larger diamonds they tend to be negative. This is also shown by the negative slope of the line of best fit and thus indicates that there is systematic structure within the data that is not explained by Model 2. In Model 3, the residuals are relatively evenly distributed above and below the line, thus showing no systematic pattern. The plots support the inclusion of an interaction between cut and log-weight in the model. Thus Model 3 is preferable to Model 2, least for fair cut diamonds.
+
+```{r Q2}
 #| label: fig-2
-#| fig-cap: "Scatterplot of log-price against log-weight with fitted lines for Model 1 and Model 2."
-model1 <- lm(log(price) ~ log(weight), data=dia4)
-model2 <- lm(log(price) ~ log(weight), data=subset(dia4, cut=="Fair"))
+#| fig-cap: "Scatterplots standardised residuals against log-weight for fair cut diamonds for Model 2 (left) and Model 3 (right)."
 
-plot(log(price) ~ log(weight), cex=0.25, col="grey", xlab="log-weight (in log-carat)", 
-     ylab="log-price (in log-$)", data=dia4)
-abline(model1, lwd=1.5); abline(model2, col="red", lty=2, lwd=1.5); 
+lm3.out <- lm(log(price) ~ log(weight) + cut + cut:log(weight), data=dia5)
+res2 <- rstandard(lm2.out)
+res3 <- rstandard(lm3.out)
+ind <- dia5$cut=="Fair"
 
-points(log(dia4$weight[c(78, 137, 187)]), log(dia4$price[c(78, 137, 187)]), col="red", pch=16, cex=0.75)
-legend("bottomright", legend="most influential observations", cex=0.75, pch=16, col="red")
-legend("topleft", legend=c("for complete data set", "for diamonds of poor cut"), title="fitted model", lwd=1.5, lty=c(1,2), col=c("black", "red"), cex=0.75)
+par(mfrow = c(1, 2))
+
+plot(res2[ind] ~ log(dia5$weight[ind]), xlab="log-weight (in log-carat)", ylab="Standardised residuals")
+abline(lm(res2[ind] ~ log(dia5$weight[ind])), col="red")
+plot(res3[ind] ~ log(dia5$weight[ind]), xlab="log-weight (in log-carat)", ylab="Standardised residuals")
+abline(lm(res3[ind] ~ log(dia5$weight[ind])), col="red")
+
+par(mfrow = c(1, 1))
 ```
 
 ## Question 3
 
-@fig-3 shows a scatterplot of the standardised residuals for Model 1 against log-weight. The colour-coding reveals that the heaviest diamonds in the data set tend to have a fair cut. More importantly, diamonds with a fair cut tend to have negative residuals, while diamonds with a very good or ideal cut, tend to have positive residuals. This provides support for the inclusion of `cut` as an additional explanatory variable in the model.
-
-```{r Question3}
-#| label: fig-3
-#| fig-cap: "A scatterplot of standardised residuals of Model 1 against log-weight."
-library(RColorBrewer)
-
-ind <- ifelse(dia4$cut=="Fair", 1, ifelse(dia4$cut == "Very Good", 2, 3))
-col <-  brewer.pal(3, "Dark2")
-lm.out <- lm(log(price) ~ log(weight), data=dia4)
-res <- rstandard(lm.out)
-plot(res ~ log(weight), data=dia4,
-     col=col[ind], pch=ind, cex=0.5, 
-     xlab="log-weight (in log-carat)",
-     ylab="standardised residuals",
-     main="Regression of log-price on log-weight")
-legend("topright", legend=c("Fair", "Very Good", "Ideal"), pch=c(1,2,3), col=col, title="diamond cut", cex=0.75)
-```
-
-## Question 4
-
-Observation 137 has the largest Cook's distance and is thus the most influential observation. It is a diamond with a fair cut and weighs `r dia4$weight[137]` carat, which is the highest. As leverage measures how unusual the predictor values are within a given the dataset, this results in observation 137 having the highest leverage within the dataset as can be seen in @fig-1 and @tbl-1.
-
-Furthermore, the table in Part 1 shows that observation 137 has a large negative standardised residual equal to -3.56. @fig-2 demonstrate that the model fitted to the complete dataset tends to over-estimate the price for diamonds of fair cut. @fig-3 shows that overprediction is worse for heavier diamonds. Hence observation 137 results in a large negative residual.
-
-Because Cook’s distance reflects both leverage and residual size, the high leverage and large negative residual of observation 137 make it the most influential observation.
-
-```{r Question4}
-#| label: tbl-2
-#| tbl-cap: "Statistics for observation 137"
-knitr::kable(df[2, ])
-```
+Our analysis has shown that, in addition to the weight of a diamond, its cut is informative about its price. If the weight of diamonds are the same, better cut quality diamonds tend to have higher prices. And for a given percentage increase in the weight of a diamond, the resulting percentage increase in the predicted price depends on the cut of the diamond.
