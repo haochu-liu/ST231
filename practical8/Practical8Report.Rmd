@@ -1,0 +1,128 @@
+---
+title: "Practical Report 8"
+output:
+   pdf_document: 
+     keep_tex: true
+     fig_caption: yes
+     highlight: monochrome
+   html_document:
+    df_print: paged
+    code_folding: hide
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="70%")} else {opts_chunk$set(echo=TRUE)}
+```
+
+
+
+
+# Polynomial regression 
+
+
+
+a. In Practical 7 we observed a non-linear and non-monotonic relationship between the explanatory variable and the response. 
+We fit four polynomial regression models of increasing complexity to the data. 
+
+```{r, fig.cap=""}
+#
+poldata <- read.csv("poldata.csv")
+plot(y ~ x, data=poldata, pch=16)
+# 
+m1 <- lm(y ~ x,                            data=poldata) #Linear model
+m2 <- lm(y ~ x + I(x^2),                   data=poldata) #Quadratic model
+m3 <- lm(y ~ x + I(x^2) + I(x^3),          data=poldata) #Cubic model
+m4 <- lm(y ~ x + I(x^2) + I(x^3) + I(x^4), data=poldata) #Quartic model
+# 
+ax <- seq(from=2, to=6, length=101)
+# We save the models in a list and then use a for-loop 
+# over the items in the list to save on writing
+mlist <- list(m1, m2, m3, m4)
+for (i in seq_along(mlist)) {
+  #
+  p <- predict(mlist[[i]], newdata=list(x=ax))
+  #
+  lines(ax, p, col=5-i, lwd=2, lty=i)
+}
+#
+legend("topright", lwd=2, col=4:1, legend=1:4, lty=1:4, title="degree")
+```
+
+<!---  Comment on the plot --->
+
+b. An unbiased estimate for the error variance can be computed as ...
+
+c.  <!--- Hypothesis test to decide whether a quartic term is needed in the model--->
+
+<!--- Note how to report on a hypothesis test
+- state the null and alternative hypothesis;
+- give an algebraic expression of the test statistic;
+- give the distribution of the test statistic under the null hypothesis;
+- give the observed value of the test statistic;
+- report the $p$-value;
+- state the outcome of the test;
+- draw an appropriate  conclusion.
+--->
+
+
+d. <!--- Answer to question d. --->
+
+e. <!--- Hypothesis test: quadratic versus cubic model --->
+
+
+# Multicollinearity
+
+In the following we illustrate the issues that arise when we have multi-collinear predictors. We start by simulating realisations of 3 explanatory variables $X_1$, $X_2$ and $X_3$, such that $X_1$ and $X_3$ have a strong linear relationship. We then sample realisations of the response variable from the model
+\[Y_i \quad = \quad 1 + x_{i1} + x_{i2} + x{i_3} + \epsilon_i,\]
+where $i=1, \ldots, 100$ and $\epsilon_1, \ldots, \epsilon_{100}$ are iid N(0, $0.5^2$) distributed.
+
+```{r}
+# Producing realisations from the explanatory variables
+set.seed(8)
+x1 <- runif(100)
+x2 <- runif(100)
+x3 <- 2 * x1 + rnorm(100,0,0.02)
+# Sampling response observations
+y  <- 1 + x1 + x2 + x3 + rnorm(100,0,0.5)
+```
+
+We can illustrate the relationship between the explanatory variables using a `pairs` plot. 
+
+```{r,out.width="65%",fig.align='center', fig.cap="A scatterplot matrix of the three explanatory variables x1, x2 and x3 from the artificial data set."}
+pairs(x1 ~ x2 + x3)
+```
+
+<!--- Comment on the scatterplot matrix ---> 
+
+
+First we consider a linear model of $Y$ on all three explanatory variables, that is $X_1$, $X_2$ and $X_3$. 
+
+```{r}
+m2 <- lm(y ~ x1 + x2 + x3)
+summary(m2)
+```
+
+<!--- Comment on the results ---> 
+
+
+Next consider a linear model of $Y$ on $X_2$ and $X_3$. 
+
+```{r}
+m1 <- lm(y ~ x1 + x2)
+summary(m1)
+```
+
+<!--- Comment on the results---> 
+
+
+We can quantify multi-collinearity using variance inflation factors. The $j$th variance inflation factor ${\rm VIF}_j$ is the multiplicative factor by which the variance of the estimator $\hat{\beta_j}$ is inflated due to (approximate) collinearity.
+
+The variance inflation factors  be computed using `vif` from car package. As a rule of thumb we regard a ${\rm VIF}_j> 10$ as a concern.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(car)
+round(vif(m2), 2)
+```
