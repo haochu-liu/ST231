@@ -9,6 +9,9 @@ output:
     df_print: paged
     code_folding: hide
 fontsize: 12pt
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include = FALSE}
@@ -17,67 +20,123 @@ pdf_doc <- knitr::is_latex_output()
 if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="70%")} else {opts_chunk$set(echo=TRUE)}
 ```
 
+# Polynomial regression
 
+## Part A
 
+In Practical 7 we observed a non-linear and non-monotonic relationship
+between the explanatory variable and the response. We fit four
+polynomial regression models of increasing complexity to the data.
 
-# Polynomial regression 
-
-
-
-a. In Practical 7 we observed a non-linear and non-monotonic relationship between the explanatory variable and the response. 
-We fit four polynomial regression models of increasing complexity to the data. 
-
-```{r, fig.cap=""}
-#
-poldata <- read.csv("poldata.csv")
+```{r, fig.cap="A scatterplot of the data and the fitted curves."}
+# Load and plot data 
+poldata <- read.csv("../data/poldata.csv")
 plot(y ~ x, data=poldata, pch=16)
-# 
+# Fit the four polynomial models
 m1 <- lm(y ~ x,                            data=poldata) #Linear model
 m2 <- lm(y ~ x + I(x^2),                   data=poldata) #Quadratic model
 m3 <- lm(y ~ x + I(x^2) + I(x^3),          data=poldata) #Cubic model
 m4 <- lm(y ~ x + I(x^2) + I(x^3) + I(x^4), data=poldata) #Quartic model
-# 
+
+# Vector of x values at which to compute  predicted y value
 ax <- seq(from=2, to=6, length=101)
-# We save the models in a list and then use a for-loop 
-# over the items in the list to save on writing
+# Assign fitted models to a list
 mlist <- list(m1, m2, m3, m4)
+# Loop over list of models
 for (i in seq_along(mlist)) {
-  #
-  p <- predict(mlist[[i]], newdata=list(x=ax))
-  #
-  lines(ax, p, col=5-i, lwd=2, lty=i)
+    # Compute fitted values
+    p <- predict(mlist[[i]], newdata=list(x=ax))
+    # Plot smooth line through fitted values
+    lines(ax, p, col=5-i, lwd=2, lty=i)
 }
-#
+# Add a legend
 legend("topright", lwd=2, col=4:1, legend=1:4, lty=1:4, title="degree")
 ```
 
-<!---  Comment on the plot --->
+We can see that the fitted cubic and quartic model are virtually
+indistinguishable in the plot.
 
-b. An unbiased estimate for the error variance can be computed as ...
+## Part B
 
-c.  <!--- Hypothesis test to decide whether a quartic term is needed in the model--->
+To get the unbiased estimate for the error variance, we need the
+residual standard error, which can be derived by `summary(m4)$sigma` or
+just looking for it in the summary table.
 
-<!--- Note how to report on a hypothesis test
-- state the null and alternative hypothesis;
-- give an algebraic expression of the test statistic;
-- give the distribution of the test statistic under the null hypothesis;
-- give the observed value of the test statistic;
-- report the $p$-value;
-- state the outcome of the test;
-- draw an appropriate  conclusion.
---->
+```{r}
+summary(m4)
+print(paste0("The error variance is ", round(summary(m4)$sigma^2, 4)))
+```
 
+## Part C
 
-d. <!--- Answer to question d. --->
+Let the formula for the quartic model be represented algebraically as $$
+Y \quad = \quad  \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \beta_4 x^4 + \epsilon.
+$$ To test $H_0: \beta_4 = 0$ versus $H_1: \beta_4 \neq 0$ we use a
+$t$-test. The number of units of observation in the dataset is $n=14$
+and the quartic model has $p=5$ parameters. Hence, under $H_0$, the
+$T$-statistic, defined as
+$\frac{\widehat{\beta_4}}{{\rm std.error}(\widehat{\beta_4})}$ has a
+$t$-distribution on $n-p=14-5 = 9$ degrees of freedom. As is listed in
+the 4th row of the table of coefficients, the observed value of the
+$T$-statistic is $T_{\rm obs} = -0.079$ which has a $p$-value of
+$0.939 > 0.05$. Thus fail to reject the null hypothesis that
+$\beta_4=0$. We conclude that the quartic model is not a significant
+improvement over the cubic model. Hence we do not include a quartic term
+in the model and instead retain the cubic model.
 
-e. <!--- Hypothesis test: quadratic versus cubic model --->
+**Alternative:**
 
+We can also compute the sequential ANOVA table for the quartic model.
+This follows the hypothesis test given by the definition of the ANOVA
+table.
+
+```{r}
+anova(m4)
+```
+
+## Part D
+
+It is not possible to read from the model summary for the quartic model
+whether a cubic polynomial is needed. The degree of freedom will be
+different for different models. And the $p$-value reported for the cubic
+term may change after removing the quartic term from the model.
+**However, we can read from the ANOVA table for the hypothesis test
+whether including the third order term.**
+
+## Part E
+
+Let the formula for the cubic model be represented algebraically as $$
+Y = \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \epsilon.
+$$ We would like to test $H_0: \beta_3 = 0$ versus
+$H_1: \beta_3 \neq 0$. The number of units of observation in the dataset
+is $n=14$ and the cubic model has $p=4$ parameters. Hence, under $H_0$,
+the $T$-statistic, defined as
+$\frac{\widehat{\beta_3}}{{\rm std.error}(\widehat{\beta_3})}$ has a
+$t$-distribution with $n-p=14-4 = 10$ degrees of freedom.
+
+The observed value of the $T$-statistic is $$
+T_{\rm obs}  \quad = \quad \frac{0.059}{0.009} \quad = \quad  6.56.
+$$ The associated $p$-value is given by $$
+p \quad = \quad  2 \Big[1- F_{t_{10}}(6.56)\Big].
+$$ (We can compute $F_{t_{10}}(6.56)$ using the command
+`pt(q=6.56, df=10)`.)
+
+```{r}
+t_obs <- summary(m3)$coefficients[4, 1] / summary(m3)$coefficients[4, 2]
+print(paste0("The p-value is ", 2*(1-pt(q=t_obs, df=10))))
+summary(m3)
+```
 
 # Multicollinearity
 
-In the following we illustrate the issues that arise when we have multi-collinear predictors. We start by simulating realisations of 3 explanatory variables $X_1$, $X_2$ and $X_3$, such that $X_1$ and $X_3$ have a strong linear relationship. We then sample realisations of the response variable from the model
-\[Y_i \quad = \quad 1 + x_{i1} + x_{i2} + x{i_3} + \epsilon_i,\]
-where $i=1, \ldots, 100$ and $\epsilon_1, \ldots, \epsilon_{100}$ are iid N(0, $0.5^2$) distributed.
+In the following we illustrate the issues that arise when we have
+multi-collinear predictors. We start by simulating realisations of 3
+explanatory variables $X_1$, $X_2$ and $X_3$, such that $X_1$ and $X_3$
+have a strong linear relationship. We then sample realisations of the
+response variable from the model
+$$Y_i \quad = \quad 1 + x_{i1} + x_{i2} + x{i_3} + \epsilon_i,$$ where
+$i=1, \ldots, 100$ and $\epsilon_1, \ldots, \epsilon_{100}$ are iid N(0,
+$0.5^2$) distributed.
 
 ```{r}
 # Producing realisations from the explanatory variables
@@ -89,38 +148,41 @@ x3 <- 2 * x1 + rnorm(100,0,0.02)
 y  <- 1 + x1 + x2 + x3 + rnorm(100,0,0.5)
 ```
 
-We can illustrate the relationship between the explanatory variables using a `pairs` plot. 
+We can illustrate the relationship between the explanatory variables
+using a `pairs` plot.
 
 ```{r,out.width="65%",fig.align='center', fig.cap="A scatterplot matrix of the three explanatory variables x1, x2 and x3 from the artificial data set."}
 pairs(x1 ~ x2 + x3)
 ```
 
-<!--- Comment on the scatterplot matrix ---> 
+<!--- Comment on the scatterplot matrix --->
 
-
-First we consider a linear model of $Y$ on all three explanatory variables, that is $X_1$, $X_2$ and $X_3$. 
+First we consider a linear model of $Y$ on all three explanatory
+variables, that is $X_1$, $X_2$ and $X_3$.
 
 ```{r}
 m2 <- lm(y ~ x1 + x2 + x3)
 summary(m2)
 ```
 
-<!--- Comment on the results ---> 
+<!--- Comment on the results --->
 
-
-Next consider a linear model of $Y$ on $X_2$ and $X_3$. 
+Next consider a linear model of $Y$ on $X_2$ and $X_3$.
 
 ```{r}
 m1 <- lm(y ~ x1 + x2)
 summary(m1)
 ```
 
-<!--- Comment on the results---> 
+<!--- Comment on the results--->
 
+We can quantify multi-collinearity using variance inflation factors. The
+$j$th variance inflation factor ${\rm VIF}_j$ is the multiplicative
+factor by which the variance of the estimator $\hat{\beta_j}$ is
+inflated due to (approximate) collinearity.
 
-We can quantify multi-collinearity using variance inflation factors. The $j$th variance inflation factor ${\rm VIF}_j$ is the multiplicative factor by which the variance of the estimator $\hat{\beta_j}$ is inflated due to (approximate) collinearity.
-
-The variance inflation factors  be computed using `vif` from car package. As a rule of thumb we regard a ${\rm VIF}_j> 10$ as a concern.
+The variance inflation factors be computed using `vif` from car package.
+As a rule of thumb we regard a ${\rm VIF}_j> 10$ as a concern.
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 library(car)
