@@ -84,24 +84,12 @@ $\beta_4=0$. We conclude that the quartic model is not a significant
 improvement over the cubic model. Hence we do not include a quartic term
 in the model and instead retain the cubic model.
 
-**Alternative:**
-
-We can also compute the sequential ANOVA table for the quartic model.
-This follows the hypothesis test given by the definition of the ANOVA
-table.
-
-```{r}
-anova(m4)
-```
-
 ## Part D
 
 It is not possible to read from the model summary for the quartic model
 whether a cubic polynomial is needed. The degree of freedom will be
 different for different models. And the $p$-value reported for the cubic
 term may change after removing the quartic term from the model.
-**However, we can read from the ANOVA table for the hypothesis test
-whether including the third order term.**
 
 ## Part E
 
@@ -129,11 +117,14 @@ summary(m3)
 
 # Multicollinearity
 
-In the following we illustrate the issues that arise when we have multi-collinear predictors. We start by simulating realisations of 3 explanatory variables $X_1$, $X_2$ and $X_3$, such that $X_1$ and $X_3$ have a strong linear relationship. We then sample realisations of the response variable from the model
-$$
+In the following we illustrate the issues that arise when we have
+multi-collinear predictors. We start by simulating realisations of 3
+explanatory variables $X_1$, $X_2$ and $X_3$, such that $X_1$ and $X_3$
+have a strong linear relationship. We then sample realisations of the
+response variable from the model $$
 Y_i \quad = \quad 1 + x_{i1} + x_{i2} + x{i_3} + \epsilon_i,
-$$
-where $i=1, \ldots, 100$ and $\epsilon_1, \ldots, \epsilon_{100}$ are iid N(0, $0.5^2$) distributed.
+$$ where $i=1, \ldots, 100$ and $\epsilon_1, \ldots, \epsilon_{100}$ are
+iid N(0, $0.5^2$) distributed.
 
 ```{r}
 # Producing realisations from the explanatory variables
@@ -145,26 +136,37 @@ x3 <- 2 * x1 + rnorm(100,0,0.02)
 y  <- 1 + x1 + x2 + x3 + rnorm(100,0,0.5)
 ```
 
-We can illustrate the relationship between the explanatory variables using a `pairs` plot. We can see a strong linear relationship between $X_1$ and $X_3$.
+We can illustrate the relationship between the explanatory variables
+using a `pairs` plot. We can see a strong linear relationship between
+$X_1$ and $X_3$.
 
 ```{r,out.width="65%",fig.align='center', fig.cap="A scatterplot matrix of the three explanatory variables x1, x2 and x3 from the artificial data set."}
 pairs(x1 ~ x2 + x3)
 ```
 
-First we consider a linear model of $Y$ on all three explanatory variables, that is $X_1$, $X_2$ and $X_3$.
+First we consider a linear model of $Y$ on all three explanatory
+variables, that is $X_1$, $X_2$ and $X_3$.
 
 ```{r}
 m2 <- lm(y ~ x1 + x2 + x3)
 summary(m2)
 ```
 
-We note that the coefficient for $X_2$ is significant and its estimate is close to the true value 1. However, neither of the coefficients of $X_1$ and $X_3$ are significant, despite the fact that both predictor variables were used when we generated $Y$. Furthermore both have values far away from the true value of the corresponding parameter. In fact $X_3$ has a negative coefficient (albeit it not being significantly different from zero.)
+We note that the coefficient for $X_2$ is significant and its estimate
+is close to the true value 1. However, neither of the coefficients of
+$X_1$ and $X_3$ are significant, despite the fact that both predictor
+variables were used when we generated $Y$. Furthermore both have values
+far away from the true value of the corresponding parameter. In fact
+$X_3$ has a negative coefficient (albeit it not being significantly
+different from zero.)
 
-Recall that, due to how we created the values for the explantory variables, we have that $X_3 \approx 2 X_1$. Now consider the estimated coefficients rounded to the nearest integer, Then,  using $X_3 \approx 2 X_1$, the mean function of the fitted model is roughly 
-$$
+Recall that, due to how we created the values for the explantory
+variables, we have that $X_3 \approx 2 X_1$. Now consider the estimated
+coefficients rounded to the nearest integer, Then, using
+$X_3 \approx 2 X_1$, the mean function of the fitted model is roughly $$
 5X_1+X_2 - X_3 \; \approx \;  5 X_1+X_2 - 2 X_1 \; = \; X_1 + X_2 + 2 X_1 \; \approx \; X_1 + X_2 + X_3.
-$$
-Thus the predictions from the model will be consistent with the model that generated the data.
+$$ Thus the predictions from the model will be consistent with the model
+that generated the data.
 
 Next consider a linear model of $Y$ on $X_2$ and $X_3$.
 
@@ -173,15 +175,23 @@ m1 <- lm(y ~ x1 + x2)
 summary(m1)
 ```
 
-We note that the coefficients for both $X_2$ and $X_3$ are significant. While the coefficient for $X_2$ is close to the true value of 1, the coefficient for $X_1$ is around 3. Taking into account again that $X_1 \approx 2 X_3$ we observe that the mean function is roughly given 
+We note that the coefficients for both $X_2$ and $X_3$ are significant.
+While the coefficient for $X_2$ is close to the true value of 1, the
+coefficient for $X_1$ is around 3. Taking into account again that
+$X_1 \approx 2 X_3$ we observe that the mean function is roughly given
 $$
 3X_1 +  X_2 \quad \approx \quad  X_1 +  X_2 + X_3.
-$$
-Thus, while the existence of multi-collinearity creates with issues in identifying the effects of individual variables, it does not tend to affect prediction. 
+$$ Thus, while the existence of multi-collinearity creates with issues
+in identifying the effects of individual variables, it does not tend to
+affect prediction.
 
-We can quantify multi-collinearity using variance inflation factors. The $j$th variance inflation factor ${\rm VIF}_j$ is the multiplicative factor by which the variance of the estimator $\hat{\beta_j}$ is inflated due to (approximate) collinearity.
+We can quantify multi-collinearity using variance inflation factors. The
+$j$th variance inflation factor ${\rm VIF}_j$ is the multiplicative
+factor by which the variance of the estimator $\hat{\beta_j}$ is
+inflated due to (approximate) collinearity.
 
-The variance inflation factors be computed using `vif` from car package. As a rule of thumb we regard a ${\rm VIF}_j> 10$ as a concern.
+The variance inflation factors be computed using `vif` from car package.
+As a rule of thumb we regard a ${\rm VIF}_j> 10$ as a concern.
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 library(car)
