@@ -13,6 +13,9 @@ output:
     df_print: paged
     code_folding: hide
 fontsize: 12pt
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include = FALSE}
@@ -23,23 +26,50 @@ if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%", co
 
 # Effectiveness of blood pressure treatment
 
+We begin with the model from Practical 7, that is $$
+{\mathbb E}[\texttt{BPchange}_i]\quad = \quad \beta_0+\beta_1\texttt{BPinit}_i+\beta_2\texttt{Dose}_i, \qquad \mbox{where } i=1, \ldots, 40.
+$$
+
 ```{r, LoadData}
-bpdata <- read.csv("bpdata.csv")
+bpdata <- read.csv("../data/bpdata.csv")
 lm.out1 <- lm(BPchange ~ BPinit + Dose, data=bpdata)
 ```
 
 ## Part a
 
-<!--- Perform a test for the existence of regression --->
+We perform the test by `anova` between null model and `lm.out1`.
 
 ```{r, GlobalFtest}
-    # Fit null model
-    lm.out0 <- lm(BPchange ~ 1, data=bpdata)
-    # Use the anova function with two arguments
-    anova(lm.out0, lm.out1)
+# Fit null model
+lm.out0 <- lm(BPchange ~ 1, data=bpdata)
+# Use the anova function with two arguments
+anova(lm.out0, lm.out1)
 ```
 
-<!--- Identify the entries needed to compile the corresponding ANOVA table-->
+| Source | d.f. | SS | MS | F |
+|:--------------|:-------------:|:-------------:|:-------------:|:-------------:|
+| Regression | 2 | $\sum_{i=1}^{n} (\hat{y}_i - \bar{y})^2$ | $\frac{\text{RegrSS}}{p-1}$ | 96.128 |
+| Residual | 37 | $\sum_{i=1}^{n} (y_i - \hat{y}_i)^2$ | $\frac{\text{ResidSS}}{n-p}$ |  |
+| Total | 39 | $\sum_{i=1}^{n} (y_i - \bar{y})^2$ |  |  |
+
+The output gives the observed $F$-statistic and $p$-value but we still need to compute the mean squares and sum of squares to construct the full ANOVA table for the existence of regression.
+
+From the table, we know directly that residual sum of squares (ResidSS) is
+$$
+\sum_{i=1}^n (y_i - \hat{y}_i)^2 = 42.248,
+$$
+and the regression sum of squares (RegrSS) is
+$$
+\begin{align*}
+\sum_{i=1}^n (\hat{y}_i - \bar{y})^2 &= \sum_{i=1}^n (y_i - \bar{y})^2 - \sum_{i=1}^n (y_i - \hat{y}_i)^2\\
+&= \text{ResidSS of Model 1} - \text{ResidSS of Model 2}\\
+&= 261.775 - 42.248 = 219.527
+\end{align*}
+$$
+
+For the mean squares, we have
+-  ${\rm RegrMS}  = \frac{{\rm RegrSS}}{{\rm df(RegrSS)}} = \frac{219.527}{2} = 109.762,$
+-  ${\rm ResidMS}  = \frac{{\rm ResidSS}}{{\rm df(ResidSS)}} = \frac{42.248}{37} = 1.142,$
 
 ## Part b
 
@@ -57,10 +87,10 @@ lm.out1 <- lm(BPchange ~ BPinit + Dose, data=bpdata)
 
 <!--- How can the results of the sequential ANOVA be used to re-produce the results for the ANOVA for a test of existence in a? --->
 
-
 # Model selection statistics
 
 <!--- Experiment 1 --->
+
 ```{r,  fig.cap=""}
 # Generate data
 set.seed(22)
@@ -112,7 +142,3 @@ legend("bottomright", c(expression(R^2), expression(R[adj]^2)),
 abline(v=3)
 abline(h=r2adj[3],col="gray50",lty=2)
 ```
-
-
-
-
