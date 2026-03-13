@@ -1,17 +1,17 @@
 ---
 title: "Practical Report 9"
 output:
-  pdf_document:
-    keep_tex: yes
-    fig_caption: yes
-    highlight: monochrome
+  html_document:
+    df_print: paged
+    code_folding: hide
   bookdown::gitbook:
     highlight: monochrome
     code_folding: hide
     global_numbering: yes
-  html_document:
-    df_print: paged
-    code_folding: hide
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    highlight: monochrome
 fontsize: 12pt
 editor_options: 
   markdown: 
@@ -21,14 +21,16 @@ editor_options:
 ```{r setup, include = FALSE}
 require(knitr)
 pdf_doc <- knitr::is_latex_output()
-if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%", comment="")} else {opts_chunk$set(comment="")}
+if (pdf_doc) {opts_chunk$set(echo=TRUE, fig.align="center", out.width="60%", comment="")} else {opts_chunk$set(comment="")}
 ```
 
 # Effectiveness of blood pressure treatment
 
 We begin with the model from Practical 7, that is
 $$
+\begin{align*}
 {\mathbb E}[\texttt{BPchange}_i]\quad = \quad \beta_0+\beta_1\texttt{BPinit}_i+\beta_2\texttt{Dose}_i, \qquad \mbox{where } i=1, \ldots, 40.
+\end{align*}
 $$
 
 ```{r, LoadData}
@@ -47,20 +49,22 @@ lm.out0 <- lm(BPchange ~ 1, data=bpdata)
 anova(lm.out0, lm.out1)
 ```
 
+The table we want is
+
 | Source | d.f. | SS | MS | F |
 |:--------------|:-------------:|:-------------:|:-------------:|:-------------:|
 | Regression | 2 | $\sum_{i=1}^{n} (\hat{y}_i - \bar{y})^2$ | $\frac{\text{RegrSS}}{p-1}$ | 96.128 |
 | Residual | 37 | $\sum_{i=1}^{n} (y_i - \hat{y}_i)^2$ | $\frac{\text{ResidSS}}{n-p}$ |  |
 | Total | 39 | $\sum_{i=1}^{n} (y_i - \bar{y})^2$ |  |  |
 
-The output gives the observed $F$-statistic and $p$-value but we still need to compute the mean squares and sum of squares to construct the full ANOVA table for the existence of regression.
+The output gives the observed $F$-statistic and $p$-value but we still
+need to compute the mean squares and sum of squares to construct the
+full ANOVA table for the existence of regression.
 
-From the table, we know directly that residual sum of squares (ResidSS) is
-$$
+From the table, we know directly that residual sum of squares (ResidSS)
+is $$
 \sum_{i=1}^n (y_i - \hat{y}_i)^2 = 42.248,
-$$
-and the regression sum of squares (RegrSS) is
-$$
+$$ and the regression sum of squares (RegrSS) is $$
 \begin{align*}
 \sum_{i=1}^n (\hat{y}_i - \bar{y})^2 &= \sum_{i=1}^n (y_i - \bar{y})^2 - \sum_{i=1}^n (y_i - \hat{y}_i)^2\\
 &= \text{ResidSS of Model 1} - \text{ResidSS of Model 2}\\
@@ -69,25 +73,37 @@ $$
 $$
 
 For the mean squares, we have
--  ${\rm RegrMS}  = \frac{{\rm RegrSS}}{{\rm df(RegrSS)}} = \frac{219.527}{2} = 109.762,$
--  ${\rm ResidMS}  = \frac{{\rm ResidSS}}{{\rm df(ResidSS)}} = \frac{42.248}{37} = 1.142,$
 
-Recall that the test for existence of regression is based on
-$$
+-   ${\rm RegrMS}  = \frac{{\rm RegrSS}}{{\rm df(RegrSS)}} = \frac{219.527}{2} = 109.762,$
+
+-   ${\rm ResidMS}  = \frac{{\rm ResidSS}}{{\rm df(ResidSS)}} = \frac{42.248}{37} = 1.142,$
+
+Recall that the test for existence of regression is based on $$
 \begin{align*}
 H_0:\:  \beta_1=\beta_2=0 \qquad \text{vs} \qquad 
 H_1:\:  \mbox{ at least one of } \beta_1,\beta_2 \mbox{ is non-zero}.
 \end{align*}
-$$
-We have $n=40$ and $p=3$ from data and model parameters. Thus, under $H_0$, $F \sim F_{p-1,n-p} = F_{2, 37}$. We can calculate the p-value given by $P(F_{2, 37} \geq F_{\rm obs})$ where $F_{\rm obs}=96.128$ and obtain `r formatC(pf(96.128, df1=2, df2=37, lower.tail=FALSE), format = "e", digits = 2)` which is substantially smaller than the significance level of 5%. Thus we have very strong evidence to reject $H_0$. We conclude that at least one of the two explanatory variables, that is the initial blood pressure (`BPinit`) and the dosage of the new drug (`Dose`), are informative about the change in blood pressure (`BPchange`).
+$$ We have $n=40$ and $p=3$ from data and model parameters. Thus, under
+$H_0$, $F \sim F_{p-1,n-p} = F_{2, 37}$. We can calculate the p-value
+given by $P(F_{2, 37} \geq F_{\rm obs})$ where $F_{\rm obs}=96.128$ and
+obtain
+`r formatC(pf(96.128, df1=2, df2=37, lower.tail=FALSE), format = "e", digits = 2)`
+which is substantially smaller than the significance level of 5%. Thus
+we have very strong evidence to reject $H_0$. We conclude that at least
+one of the two explanatory variables, that is the initial blood pressure
+(`BPinit`) and the dosage of the new drug (`Dose`), are informative
+about the change in blood pressure (`BPchange`).
 
 ## Part b
 
-The `anova()` function with one argument produces a sequential ANOVA which shows what happens when, starting from the null model (with only the intercept), we add the terms of the model sequentially from left to right. If the formula is
-$$
+The `anova()` function with one argument produces a sequential ANOVA
+which shows what happens when, starting from the null model (with only
+the intercept), we add the terms of the model sequentially from left to
+right. If the formula is $$
+\begin{align*}
 {\tt BPchange \quad \sim  \quad BPinit + Dose}
-$$
-when the `R` output shows the effect of adding `BPinit` then `Dose`.
+\end{align*}
+$$ when the `R` output shows the effect of adding `BPinit` then `Dose`.
 
 ```{r, SequentialAnova}
 anova(lm.out1)
@@ -95,16 +111,26 @@ anova(lm.out1)
 
 ## Part c
 
-By controlling for initial blood pressure, this question is asking the effect of new drug on blood pressure. This is the same as asking about the significance of the parameter for the `Dose` term. Hence, we can apply a hypothesis test as
-$$
+By controlling for initial blood pressure, this question is asking the
+effect of new drug on blood pressure. This is the same as asking about
+the significance of the parameter for the `Dose` term. Hence, we can
+apply a hypothesis test as $$
 \begin{align*}
     H_0:\:  \beta_2 = 0  \quad \text{versus} \quad
     H_1:\:  \beta_2 \neq 0.
 \end{align*}
-$$
-As `Dose` was entered second in the model, this test is reported on in the sequential ANOVA in the row corresponding to `Dose`. As the $p$-value is less than 0.001, there is very strong evidence to reject $H_0$. We thus conclude that, controlling for initial blood pressure, the new drug has an effect on blood pressure.
+$$ As `Dose` was entered second in the model, this test is reported on
+in the sequential ANOVA in the row corresponding to `Dose`. As the
+$p$-value is less than 0.001, there is very strong evidence to reject
+$H_0$. We thus conclude that, controlling for initial blood pressure,
+the new drug has an effect on blood pressure.
 
-We can also use a $t$-test which is reported on in the summary output of the model. In fact, this two-sided $t$-test is equivalent to the partial $F$-test reported on in the sequential ANOVA. The observed $T$-statistic is equal to `-12.284` with a $p$-value of `1.27e-14`. (Note that the square of the observed $T$-statistic is equal to the observed $F$-statistic and they both have the same $p$-value.)
+We can also use a $t$-test which is reported on in the summary output of
+the model. In fact, this two-sided $t$-test is equivalent to the partial
+$F$-test reported on in the sequential ANOVA. The observed $T$-statistic
+is equal to `-12.284` with a $p$-value of `1.27e-14`. (Note that the
+square of the observed $T$-statistic is equal to the observed
+$F$-statistic and they both have the same $p$-value.)
 
 ```{r summary}
 summary(lm.out1)
@@ -113,35 +139,55 @@ summary(lm.out1)
 ## Part d
 
 For the degrees of freedom column, we get:
--   The total degrees of freedom is the sum of all 3 entries in the column labelled "Df":\
+
+-   The total degrees of freedom is the sum of all 3 entries in the
+    column labelled "Df":\
     $(39 = 1 + 1 + 37)$
--   The regression degrees of freedom is the sum of the two rows for the terms `Dose` and `BPinit`: $(2 = 1 + 1)$
--   The residual degrees of freedom is from the third row labelled \`\`Residuals'': $37$.
+
+-   The regression degrees of freedom is the sum of the two rows for the
+    terms `Dose` and `BPinit`: $(2 = 1 + 1)$
+
+-   The residual degrees of freedom is from the third row labelled
+    \`\`Residuals'': $37$.
 
 For the sum of squares column, we get:
+
 -   The total sum of squares is the sum of all 3 entries in the column labelled \`\`Sum Sq": $(261.775 = 47.214 + 172.313 + 42.248).$
--   The regression sum of squares is the sum of the two rows for the terms `Dose` and `BPinit`: $(219.527 = 47.214 + 172.313).$
+
+-   The regression sum of squares is the sum of the two rows for the terms `Dose` and `BPinit`:
+$(219.527 = 47.214 + 172.313).$
+
 -   The residual sum of squares is from the third row labelled \`\`Residuals" (42.248.)
 
 Hence, the $F$-statistic can be computed as
+
 -   ${\rm RegrMS}  = \frac{{\rm RegrSS}}{{\rm df(RegrSS)}} = \frac{219.527}{2} = 109.762,$
+
 -   ${\rm ResidMS}  = \frac{{\rm ResidSS}}{{\rm df(ResidSS)}} = \frac{42.248}{37} = 1.142,$
+
 -   ${F}_{\rm obs} = \frac{\rm RegrMS}{\rm ResidMS} = \frac{109.762}{1.142} = 96.128.$
 
 # Model selection statistics
 
-In Experiment 1 we generate data for 50 predictor variables $X_1, \ldots, X_{50}$ all of which are non-informative about the response $Y$ as the latter is sampled independently from the predictor variables. We then consider a sequence of models, starting with a simple linear regression of $Y$ on $X_1$ and adding the other predictor variables one at a time. For each model the coefficient of determination $R^2$ is computed. The plot below shows the resulting sequence of $R^2$ values.
+In Experiment 1 we generate data for 50 predictor variables
+$X_1, \ldots, X_{50}$ all of which are non-informative about the
+response $Y$ as the latter is sampled independently from the predictor
+variables. We then consider a sequence of models, starting with a simple
+linear regression of $Y$ on $X_1$ and adding the other predictor
+variables one at a time. For each model the coefficient of determination
+$R^2$ is computed. The plot below shows the resulting sequence of $R^2$
+values.
 
-```{r, echo=F, fig.cap="A graphical illustration of the coefficient of determination as the number of non-informative predictor variables increases in the model."}
+```{r, echo=T, fig.cap="Figure 1: A graphical illustration of the coefficient of determination as the number of non-informative predictor variables increases in the model."}
 # Generate data
 set.seed(22)
 x <- matrix(rnorm(5000),100,50)
 y <- rnorm(100)
 data <- as.data.frame(cbind(y,x))
-# 
+# Fit linear regression models with increasing number of variables
 r2 <- rep(NA,50)
 for (j in 1:50){
-  data_temp<-data[ ,1:(j+1)]
+  data_temp <- data[ ,1:(j+1)]
   r2[j] <- summary(lm(y ~ ., data=data_temp))$r.squared 
 }
 # Plot the sequence of R^2 statistics
@@ -150,21 +196,26 @@ plot(r2,type="l",lwd=1.5,col="blue",
 points(r2,col="blue",pch=20)
 ```
 
-We observe that despite the predictor variables all being non-informative about the response, the coefficient of determination $R^2$ continues to increase as we add more predictor variables to the model.
+We observe that despite the predictor variables all being
+non-informative about the response, the coefficient of determination
+$R^2$ continues to increase as we add more predictor variables to the
+model.
 
-In Experiment 2 we generate data for 10 predictor variables. The response is sampled from the model
-$$
+In Experiment 2 we generate data for 10 predictor variables. The
+response is sampled from the model $$
+\begin{align*}
 Y_i = 1 + 0.25x_{i,1}  + 0.5x_{i,2} + 0.5 x_{i,3}  + \epsilon_i, \qquad \mbox{where }  \epsilon_i \sim {\cal N}(0,1) \;  {\rm iid},  \qquad i=1, \ldots, 10.
-$$
-Thus the first three predictor variables are informative about the response, while the other predictor variables are not.
+\end{align*}
+$$ So only the first three variables are informative about $Y$, while
+the other predictor variables are not.
 
-```{r, echo=F, fig.cap="A graphical illustration of the difference of behaviour between the coefficient of determination and the adjusted coefficient of determination as the number of predictor variables increases in the model."}
+```{r, echo=T, fig.cap="Figure 2: A graphical illustration of the difference of behaviour between the coefficient of determination and the adjusted coefficient of determination as the number of predictor variables increases in the model."}
 # Generate data
 set.seed(13)
 x <- matrix(rnorm(1000),100,10)
 y <- rnorm(100) + 1 + 0.25*x[,1] + 0.5*x[,2] + 0.5*x[,3] 
 data <- as.data.frame(cbind(y,x))
-#
+# Fit linear regression models with increasing number of variables
 r2 <- rep(NA,10)
 r2adj <- rep(NA,10)
 for (j in 1:10){
@@ -190,6 +241,40 @@ abline(v=3)
 abline(h=r2adj[3],col="gray50",lty=2)
 ```
 
-This time, as we add predictor variables one at a time to the model we observe that $R^2$ increases rapidly when the first three informative predictor variables are added. It continues to increase albeit at a slower rate as we add the remaining predictor variables one by one.
+This time, as we add predictor variables one at a time to the model we
+observe that $R^2$ increases rapidly when the first three informative
+predictor variables are added. It continues to increase albeit at a
+slower rate as we add the remaining predictor variables one by one.
 
-Note the contrast in behaviour by the adjusted $R^2$, which also rapidly increases as the first three informative predictor variables are added. However, as the non-informative predictor variables are added, it stops increasing and at times even decreases. This is because the adjusted $R^2$ not only considers the reduction in residual sum of squares as we move from one model to the next, but also penalises for model complexity. It is thus more effective as a model selection statistic.
+Note the contrast in behaviour by the adjusted $R^2$, which also rapidly
+increases as the first three informative predictor variables are added.
+However, as the non-informative predictor variables are added, it stops
+increasing and at times even decreases. This is because the adjusted
+$R^2$ not only considers the reduction in residual sum of squares as we
+move from one model to the next, but also penalises for model
+complexity. It is thus more effective as a model selection statistic.
+
+```{r, echo=F, fig.cap="Figure 3: Extra graph about the first experiment."}
+# Generate data
+set.seed(22)
+x <- matrix(rnorm(5000),100,50)
+y <- rnorm(100)
+data <- as.data.frame(cbind(y,x))
+# Fit linear regression models with increasing number of variables
+r2 <- rep(NA,50)
+r2adj <- rep(NA,50)
+for (j in 1:50){
+data_temp<-data[,1:(j+1)]
+r2[j] <- summary(lm(y ~ ., data=data_temp))$r.squared 
+r2adj[j] <- summary(lm(y ~ ., data=data_temp))$adj.r.squared 
+}
+# Plot the sequence of R^2 statistics
+plot(r2,type="l",lwd=1.5,col="blue",lty=3,
+     xlab="number of predictor variables",ylab=expression(R^2),
+     ylim=c(min(r2adj)-0.1, max(r2)+0.1))
+points(r2adj,type="l",lwd=1.5,col="darkred")
+points(r2,col="blue",pch=20)
+points(r2adj,col="darkred",pch=20)
+legend("topleft", c(expression(R^2), expression(R[adj]^2)), 
+       col = c("blue","darkred"), lty = c(3, 1), pch=c(20,20),cex=1.3, lwd=2)
+```
