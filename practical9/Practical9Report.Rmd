@@ -26,8 +26,7 @@ if (pdf_doc) {opts_chunk$set(echo=TRUE, fig.align="center", out.width="60%", com
 
 # Effectiveness of blood pressure treatment
 
-We begin with the model from Practical 7, that is
-$$
+We begin with the model from Practical 7, that is $$
 \begin{align*}
 {\mathbb E}[\texttt{BPchange}_i]\quad = \quad \beta_0+\beta_1\texttt{BPinit}_i+\beta_2\texttt{Dose}_i, \qquad \mbox{where } i=1, \ldots, 40.
 \end{align*}
@@ -148,16 +147,18 @@ For the degrees of freedom column, we get:
     terms `Dose` and `BPinit`: $(2 = 1 + 1)$
 
 -   The residual degrees of freedom is from the third row labelled
-    \`\`Residuals'': $37$.
+    "Residuals": $37$.
 
 For the sum of squares column, we get:
 
--   The total sum of squares is the sum of all 3 entries in the column labelled \`\`Sum Sq": $(261.775 = 47.214 + 172.313 + 42.248).$
+-   The total sum of squares is the sum of all 3 entries in the column
+    labelled "Sum Sq": $(261.775 = 47.214 + 172.313 + 42.248).$
 
--   The regression sum of squares is the sum of the two rows for the terms `Dose` and `BPinit`:
-$(219.527 = 47.214 + 172.313).$
+-   The regression sum of squares is the sum of the two rows for the
+    terms `Dose` and `BPinit`: $(219.527 = 47.214 + 172.313).$
 
--   The residual sum of squares is from the third row labelled \`\`Residuals" (42.248.)
+-   The residual sum of squares is from the third row labelled
+    "Residuals" (42.248.)
 
 Hence, the $F$-statistic can be computed as
 
